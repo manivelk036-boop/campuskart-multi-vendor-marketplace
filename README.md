@@ -1,24 +1,84 @@
-# CampusKart – Multi-Vendor E-Commerce Marketplace
+# 🛒 CampusKart – Multi-Vendor E-Commerce Marketplace
 
-## 📌 Project Description
-CampusKart is a full-stack multi-vendor e-commerce platform that allows multiple vendors to sell products through a single marketplace. Customers can browse products, add items to their cart, place orders, and track purchases. Vendors can manage their products and orders, while administrators oversee the entire platform.
+## 📖 Project Overview
+CampusKart is a full-stack multi-vendor e-commerce marketplace developed as a Capstone Project. The platform enables multiple vendors to list products while customers can browse, search, order, and track their purchases.
 
-## 🎯 Project Objective
-To develop a secure and scalable e-commerce application with a strong Java Spring Boot backend, implementing product catalog management, order management, authentication, and role-based access control.
+The primary focus of this project is to build a scalable Java Spring Boot backend with secure authentication, product management, and order processing.
 
-## 🛠 Tech Stack
-- Frontend: React.js + Tailwind CSS
-- Backend: Spring Boot (Java 17)
-- Database: MySQL
-- Authentication: Spring Security + JWT
-- Build Tool: Maven
-- Version Control: Git & GitHub
-- API Testing: Postman
+---
 
-## 👥 User Roles
-- Admin
-- Vendor
-- Customer
+## 🚀 Tech Stack
 
-## 📅 Project Status
-🚧 Day 1 – Project Initialization
+### Backend
+- Java 17
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- Maven
+
+### Database
+- MySQL
+
+### Frontend
+- React.js
+- Tailwind CSS
+
+### Version Control
+- Git
+- GitHub
+
+---
+
+## 📂 Project Structure
+
+```
+CampusKart/
+│
+├── backend/
+├── frontend/
+├── docs/
+├── README.md
+└── .gitignore
+```
+
+---
+
+# 📅 Development Progress
+
+## ✅ Day 1
+- Initialized Git Repository
+- Created project documentation
+- Added README.md
+- Added .gitignore
+- Created project structure
+
+## ✅ Day 2
+- Installed development tools
+- Created Spring Boot backend project
+- Configured Maven
+- Verified Java 17 environment
+- Successfully started Spring Boot application
+
+---
+
+## 🎯 Upcoming Features
+
+- User Authentication (JWT)
+- Vendor Management
+- Product Management
+- Shopping Cart
+- Order Management
+- Payment Integration
+- Inventory Management
+- Admin Dashboard
+- Search & Filtering
+- Reviews & Ratings
+- Cloud Deployment
+
+---
+
+## 👨‍💻 Developer
+
+**Manivelkumar S**
+
+Capstone Project – BE Computer Science Engineering
