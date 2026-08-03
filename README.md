@@ -18,7 +18,7 @@ The primary objective of this project is to build a scalable and secure Java Spr
 - Maven
 
 ## Database
-- MySQL
+- MySQL 8.0
 
 ## Frontend
 - React.js
@@ -77,6 +77,18 @@ CampusKart/
 
 ---
 
+## ✅ Day 4
+- Created MySQL database (`campuskartt_db`)
+- Configured Spring Boot database connection
+- Connected Spring Boot with MySQL
+- Configured JPA & Hibernate
+- Verified HikariCP connection pool
+- Successfully started backend with MySQL
+- Verified Tomcat running on port **8080**
+- Successfully pushed Day 4 updates to GitHub
+
+---
+
 # 🎯 Upcoming Features
 
 - 🔐 JWT Authentication
@@ -100,4 +112,4 @@ CampusKart/
 
 **B.E. Computer Science and Engineering**
 
-Capstone Project – CampusKart Multi-Vendor E-Commerce Marketplace
+**Capstone Project – CampusKart Multi-Vendor E-Commerce Marketplace**
