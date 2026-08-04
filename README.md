@@ -88,6 +88,11 @@ CampusKart/
 - Successfully pushed Day 4 updates to GitHub
 
 ---
+## ✅ Day 5
+- Organized backend package structure
+- Created controller, service, repository, entity, dto, security, config, util, and exception packages
+- Verified Spring Boot application runs successfully after restructuring
+ ---
 
 # 🎯 Upcoming Features
 
