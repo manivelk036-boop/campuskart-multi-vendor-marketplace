@@ -33,6 +33,19 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    // Get User By Email
+    @GetMapping("/email/{email}")
+    public Optional<User> getUserByEmail(@PathVariable String email) {
+        return userService.getUserByEmail(email);
+    }
+
+    // Update User
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable Long id,
+                           @RequestBody User user) {
+        return userService.updateUser(id, user);
+    }
+
     // Delete User
     @DeleteMapping("/{id}")
     public String deleteUser(@PathVariable Long id) {
