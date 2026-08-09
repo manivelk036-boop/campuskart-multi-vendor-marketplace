@@ -1,19 +1,53 @@
-function Navbar({ cartCount, onCartClick }) {
+function Navbar({ cartCount, onCartClick, onOrdersClick }) {
   return (
     <nav className="navbar">
+
+      {/* Logo */}
       <div className="logo">
         Campus<span>Kart</span>
       </div>
 
+      {/* Navigation */}
       <div className="nav-links">
-        <button>Home</button>
-        <button>Products</button>
-        <button>My Orders</button>
+
+        <button
+          onClick={() => {
+            document
+              .getElementById("home")
+              ?.scrollIntoView({
+                behavior: "smooth",
+              });
+          }}
+        >
+          Home
+        </button>
+
+        <button
+          onClick={() => {
+            document
+              .getElementById("products")
+              ?.scrollIntoView({
+                behavior: "smooth",
+              });
+          }}
+        >
+          Products
+        </button>
+
+        <button onClick={onOrdersClick}>
+          My Orders
+        </button>
+
       </div>
 
-      <button className="cart-btn" onClick={onCartClick}>
+      {/* Cart */}
+      <button
+        className="cart-btn"
+        onClick={onCartClick}
+      >
         🛒 Cart ({cartCount})
       </button>
+
     </nav>
   );
 }
