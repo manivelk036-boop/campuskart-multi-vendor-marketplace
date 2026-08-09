@@ -1,120 +1,344 @@
-# 🛒 CampusKart – Multi-Vendor E-Commerce Marketplace
+# 🛒 CampusKart – Multi-Vendor Campus Marketplace
 
-## 📖 Project Overview
+CampusKart is a full-stack e-commerce marketplace designed for college students.
 
-CampusKart is a full-stack multi-vendor e-commerce marketplace developed as a Capstone Project. The platform enables multiple vendors to list products, while customers can browse, search, purchase, and track their orders.
+The platform allows users to browse campus products, add products to a cart, place orders, and view their orders.
 
-The primary objective of this project is to build a scalable and secure Java Spring Boot backend that follows enterprise-level architecture and best practices.
+## 🚀 Project Status
 
----
+Current MVP development:
 
-# 🚀 Tech Stack
-
-## Backend
-- Java 17
-- Spring Boot
-- Spring Security
-- Spring Data JPA
-- Maven
-
-## Database
-- MySQL 8.0
-
-## Frontend
-- React.js
-- Tailwind CSS
-
-## Version Control
-- Git
-- GitHub
+- ✅ Spring Boot Backend
+- ✅ MySQL Database
+- ✅ User Module
+- ✅ Product CRUD
+- ✅ Order CRUD
+- ✅ React Frontend
+- ✅ Product Listing
+- ✅ Shopping Cart
+- 🔄 Cart → Order integration
+- 🔄 My Orders
+- ⏳ Authentication
+- ⏳ Vendor Management
+- ⏳ Payment Integration
 
 ---
 
-# 📂 Project Structure
+## 🏗️ Project Architecture
 
 ```text
-CampusKart/
+CampusKart
 │
-├── backend/
-├── frontend/
-├── docs/
-├── README.md
-└── .gitignore
+├── backend
+│   ├── src
+│   │   └── main
+│   │       ├── java
+│   │       │   └── com.campuskart.backend
+│   │       │       ├── controller
+│   │       │       ├── entity
+│   │       │       ├── repository
+│   │       │       └── service
+│   │       │           └── impl
+│   │       │
+│   │       └── resources
+│   │           └── application.properties
+│   │
+│   └── pom.xml
+│
+└── frontend
+    ├── src
+    │   ├── components
+    │   ├── pages
+    │   ├── App.jsx
+    │   ├── App.css
+    │   └── index.css
+    │
+    ├── package.json
+    └── vite.config.js
+````
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* React
+* Vite
+* JavaScript
+* CSS
+* Axios
+
+### Backend
+
+* Java
+* Spring Boot
+* Spring Data JPA
+* Spring Security
+* Maven
+
+### Database
+
+* MySQL
+
+### Development Tools
+
+* VS Code
+* IntelliJ IDEA / Eclipse
+* MySQL Workbench
+* Postman
+* Git
+* GitHub
+
+---
+
+## 🔥 Current Features
+
+### 👤 User
+
+* User entity
+* User repository
+* User service
+* User controller
+
+### 📦 Products
+
+Product CRUD APIs:
+
+```text
+POST   /api/products
+GET    /api/products
+GET    /api/products/{id}
+PUT    /api/products/{id}
+DELETE /api/products/{id}
+```
+
+Additional APIs:
+
+```text
+GET /api/products/name/{productName}
+GET /api/products/category/{category}
+```
+
+### 🛒 Shopping Cart
+
+The React frontend currently supports:
+
+* Product listing
+* Add to cart
+* Cart item count
+* Cart product display
+* Quantity management
+* Cart total calculation
+
+### 📋 Orders
+
+Order APIs:
+
+```text
+POST   /api/orders
+GET    /api/orders
+GET    /api/orders/{id}
+PUT    /api/orders/{id}
+DELETE /api/orders/{id}
+```
+
+Additional APIs:
+
+```text
+GET /api/orders/user/{userId}
+GET /api/orders/product/{productId}
+GET /api/orders/status/{status}
 ```
 
 ---
 
-# 📅 Development Progress
+## 🔄 Current Application Flow
 
-## ✅ Day 1
-- Initialized Git repository
-- Created project folder structure
-- Added README.md
-- Added .gitignore
-- Created documentation folder
-- Pushed initial project to GitHub
-
----
-
-## ✅ Day 2
-- Verified development environment
-- Configured Java 17
-- Verified Maven installation
-- Verified Git installation
-- Verified Node.js installation
-- Verified MySQL installation
-
----
-
-## ✅ Day 3
-- Created Spring Boot backend project
-- Added required dependencies
-- Generated Maven project
-- Successfully built the project
-- Successfully started Spring Boot application
-- Verified embedded Tomcat startup
-- Prepared backend for MySQL integration
+```text
+User
+ ↓
+React Frontend
+ ↓
+Browse Products
+ ↓
+Add Product to Cart
+ ↓
+Cart
+ ↓
+Place Order
+ ↓
+Spring Boot REST API
+ ↓
+Order Service
+ ↓
+MySQL Database
+```
 
 ---
 
-## ✅ Day 4
-- Created MySQL database (`campuskartt_db`)
-- Configured Spring Boot database connection
-- Connected Spring Boot with MySQL
-- Configured JPA & Hibernate
-- Verified HikariCP connection pool
-- Successfully started backend with MySQL
-- Verified Tomcat running on port **8080**
-- Successfully pushed Day 4 updates to GitHub
+## 🌐 Local Development
+
+### Backend
+
+Navigate to:
+
+```bash
+cd backend
+```
+
+Run:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Windows:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Backend runs on:
+
+```text
+http://localhost:8080
+```
+
+### Frontend
+
+Navigate to:
+
+```bash
+cd frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run:
+
+```bash
+npm run dev
+```
+
+Frontend normally runs on:
+
+```text
+http://localhost:5173
+```
+
+If that port is already occupied, Vite automatically selects another available port.
 
 ---
-## ✅ Day 5
-- Organized backend package structure
-- Created controller, service, repository, entity, dto, security, config, util, and exception packages
-- Verified Spring Boot application runs successfully after restructuring
- ---
 
-# 🎯 Upcoming Features
+## 🗄️ Database
 
-- 🔐 JWT Authentication
-- 👤 User Management
-- 🏪 Vendor Management
-- 📦 Product Management
-- 🛒 Shopping Cart
-- 📋 Order Management
-- 💳 Payment Integration
-- 📦 Inventory Management
-- ⭐ Reviews & Ratings
-- 🔍 Product Search & Filtering
-- 📊 Admin Dashboard
-- ☁️ Cloud Deployment
+MySQL database:
+
+```text
+campuskart_db
+```
+
+Spring Boot connects to MySQL using Spring Data JPA.
 
 ---
 
-# 👨‍💻 Developer
+## 🧪 API Testing
+
+Postman is used to test the backend REST APIs.
+
+Example:
+
+```text
+GET http://localhost:8080/api/products
+```
+
+Create product:
+
+```text
+POST http://localhost:8080/api/products
+```
+
+Example request:
+
+```json
+{
+  "productName": "Gaming Laptop",
+  "description": "Dell G15 Gaming Laptop",
+  "price": 85000,
+  "quantity": 5,
+  "category": "Electronics"
+}
+```
+
+---
+
+## 📅 Development Progress
+
+| Day    | Work                           |
+| ------ | ------------------------------ |
+| Day 1  | Project setup                  |
+| Day 2  | User module                    |
+| Day 3  | Backend configuration          |
+| Day 4  | Product module                 |
+| Day 5  | Product CRUD                   |
+| Day 6  | Order module                   |
+| Day 7  | Order APIs                     |
+| Day 8  | Product CRUD completion        |
+| Day 9  | React frontend + shopping cart |
+| Day 10 | Cart → Order integration       |
+
+---
+
+## 🎯 MVP Goal
+
+The main MVP goal is to demonstrate a complete campus shopping flow:
+
+```text
+Browse Product
+      ↓
+Add to Cart
+      ↓
+View Cart
+      ↓
+Place Order
+      ↓
+Save Order
+      ↓
+View My Orders
+```
+
+---
+
+## 🔮 Future Improvements
+
+* JWT Authentication
+* Student/Vendor/Admin roles
+* Vendor dashboard
+* Product image upload
+* Product search
+* Product filtering
+* Order tracking
+* Payment gateway
+* Email notifications
+* Reviews and ratings
+* AI-powered product recommendations
+* Deployment using cloud services
+
+---
+
+## 👨‍💻 Developer
 
 **Manivelkumar S**
 
-**B.E. Computer Science and Engineering**
+BE Computer Science and Engineering
 
-**Capstone Project – CampusKart Multi-Vendor E-Commerce Marketplace**
+J.J. College of Engineering and Technology, Trichy
+
+---
+
+
