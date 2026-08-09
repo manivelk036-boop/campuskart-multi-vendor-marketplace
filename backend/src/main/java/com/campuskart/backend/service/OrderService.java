@@ -26,9 +26,8 @@ public interface OrderService {
     List<Order> getOrdersByStatus(String status);
 
     // Update Order
-    Order updateOrder(Long id, Order updatedOrder);
+    Order updateOrder(Long id, Order order);
 
     // Delete Order
     void deleteOrder(Long id);
-
 }

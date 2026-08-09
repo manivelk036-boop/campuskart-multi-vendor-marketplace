@@ -3,6 +3,7 @@ package com.campuskart.backend.service.impl;
 import com.campuskart.backend.entity.Order;
 import com.campuskart.backend.repository.OrderRepository;
 import com.campuskart.backend.service.OrderService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,61 +16,111 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    // Create Order
+
+    // =========================
+    // CREATE ORDER
+    // =========================
+
     @Override
     public Order saveOrder(Order order) {
         return orderRepository.save(order);
     }
 
-    // Get All Orders
+
+    // =========================
+    // GET ALL ORDERS
+    // =========================
+
     @Override
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
 
-    // Get Order By ID
+
+    // =========================
+    // GET ORDER BY ID
+    // =========================
+
     @Override
     public Optional<Order> getOrderById(Long id) {
         return orderRepository.findById(id);
     }
 
-    // Get Orders By User ID
+
+    // =========================
+    // GET ORDERS BY USER ID
+    // =========================
+
     @Override
     public List<Order> getOrdersByUserId(Long userId) {
         return orderRepository.findByUserId(userId);
     }
 
-    // Get Orders By Product ID
+
+    // =========================
+    // GET ORDERS BY PRODUCT ID
+    // =========================
+
     @Override
     public List<Order> getOrdersByProductId(Long productId) {
         return orderRepository.findByProductId(productId);
     }
 
-    // Get Orders By Status
+
+    // =========================
+    // GET ORDERS BY STATUS
+    // =========================
+
     @Override
     public List<Order> getOrdersByStatus(String status) {
         return orderRepository.findByStatus(status);
     }
 
-    // Update Order
+
+    // =========================
+    // UPDATE ORDER
+    // =========================
+
     @Override
-    public Order updateOrder(Long id, Order updatedOrder) {
+    public Order updateOrder(Long id, Order order) {
 
-        Order existingOrder = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        Optional<Order> existingOrder =
+                orderRepository.findById(id);
 
-        existingOrder.setUserId(updatedOrder.getUserId());
-        existingOrder.setProductId(updatedOrder.getProductId());
-        existingOrder.setQuantity(updatedOrder.getQuantity());
-        existingOrder.setTotalPrice(updatedOrder.getTotalPrice());
-        existingOrder.setStatus(updatedOrder.getStatus());
+        if (existingOrder.isPresent()) {
 
-        return orderRepository.save(existingOrder);
+            Order currentOrder =
+                    existingOrder.get();
+
+            currentOrder.setUserId(order.getUserId());
+            currentOrder.setProductId(order.getProductId());
+            currentOrder.setQuantity(order.getQuantity());
+            currentOrder.setTotalPrice(order.getTotalPrice());
+            currentOrder.setStatus(order.getStatus());
+
+            return orderRepository.save(currentOrder);
+        }
+
+        throw new RuntimeException(
+                "Order not found with ID: " + id
+        );
     }
 
-    // Delete Order
+
+    // =========================
+    // DELETE ORDER
+    // =========================
+
     @Override
     public void deleteOrder(Long id) {
+
+        if (!orderRepository.existsById(id)) {
+
+            throw new RuntimeException(
+                    "Order not found with ID: " + id
+            );
+        }
+
         orderRepository.deleteById(id);
     }
 }
