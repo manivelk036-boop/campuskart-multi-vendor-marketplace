@@ -15,9 +15,10 @@ function App() {
   // =========================
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   // =========================
-  // STATE
+  // APP STATE
   // =========================
 
   const [products, setProducts] = useState([]);
@@ -26,8 +27,16 @@ function App() {
   const [showOrders, setShowOrders] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // MVP user
-  const userId = 1;
+  // =========================
+  // LOGIN
+  // =========================
+
+  const handleLogin = (user) => {
+    console.log("User logged in:", user);
+
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+  };
 
   // =========================
   // GET PRODUCTS
@@ -137,10 +146,16 @@ function App() {
       return;
     }
 
+    // Make sure user is logged in
+    if (!currentUser || !currentUser.id) {
+      alert("Please login again.");
+      return;
+    }
+
     try {
       for (const item of cartItems) {
         const orderData = {
-          userId: userId,
+          userId: currentUser.id,
           productId: item.id,
           quantity: item.cartQuantity,
           totalPrice: Number(item.price) * item.cartQuantity,
@@ -190,13 +205,7 @@ function App() {
   // =========================
 
   if (!isLoggedIn) {
-    return (
-      <Login
-        onLogin={() => {
-          setIsLoggedIn(true);
-        }}
-      />
-    );
+    return <Login onLogin={handleLogin} />;
   }
 
   // =========================
@@ -254,7 +263,7 @@ function App() {
 
         </div>
 
-        {/* Hero Card */}
+        {/* HERO CARD */}
 
         <div className="hero-card">
 
@@ -299,7 +308,7 @@ function App() {
 
         </div>
 
-        {/* Loading */}
+        {/* LOADING */}
 
         {loading && (
           <p className="loading">
@@ -307,7 +316,7 @@ function App() {
           </p>
         )}
 
-        {/* No Products */}
+        {/* NO PRODUCTS */}
 
         {!loading &&
           products.length === 0 && (
@@ -327,7 +336,7 @@ function App() {
 
           )}
 
-        {/* Products */}
+        {/* PRODUCTS */}
 
         {!loading &&
           products.length > 0 && (

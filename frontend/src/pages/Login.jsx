@@ -1,10 +1,11 @@
 ﻿import { useState } from "react";
+import axios from "axios";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -12,17 +13,46 @@ function Login({ onLogin }) {
       return;
     }
 
-    onLogin();
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/login",
+        {
+          email: email,
+          password: password,
+        }
+      );
+
+      console.log("Logged in user:", response.data);
+
+      // Send actual logged-in user to App.jsx
+      onLogin(response.data);
+
+    } catch (error) {
+      console.error("Login error:", error);
+
+      if (error.response) {
+        alert(error.response.data);
+      } else {
+        alert(
+          "Cannot connect to backend. Make sure Spring Boot is running."
+        );
+      }
+    }
   };
 
   return (
     <div className="login-page">
 
+      {/* LEFT SIDE */}
+
       <div className="login-left">
 
         <div className="brand">
           <div className="brand-icon">CK</div>
-          <span>Campus<span>Kart</span></span>
+
+          <span>
+            Campus<span>Kart</span>
+          </span>
         </div>
 
         <div className="login-hero">
@@ -65,6 +95,8 @@ function Login({ onLogin }) {
 
       </div>
 
+      {/* RIGHT SIDE */}
+
       <div className="login-right">
 
         <div className="login-card">
@@ -98,8 +130,13 @@ function Login({ onLogin }) {
             <div className="input-group">
 
               <div className="password-label">
+
                 <label>Password</label>
-                <a href="#forgot">Forgot password?</a>
+
+                <a href="#forgot">
+                  Forgot password?
+                </a>
+
               </div>
 
               <input
@@ -117,7 +154,7 @@ function Login({ onLogin }) {
               className="login-button"
             >
               Login to CampusKart
-              <span>-&gt;</span>
+              <span>→</span>
             </button>
 
           </form>
