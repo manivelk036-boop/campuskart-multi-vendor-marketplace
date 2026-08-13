@@ -1,6 +1,8 @@
 package com.campuskart.backend.controller;
 
 import com.campuskart.backend.entity.Product;
+import com.campuskart.backend.entity.User;
+import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.ProductService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,25 +23,70 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    // Create Product
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
+    @Autowired
+    private UserRepository userRepository;
+
+    // =========================
+    // CREATE PRODUCT FOR SELLER
+    // =========================
+
+    @PostMapping("/seller/{sellerId}")
+    public Product createProduct(
+            @PathVariable Long sellerId,
+            @RequestBody Product product) {
+
+        User seller = userRepository.findById(sellerId)
+                .orElseThrow(() ->
+                        new RuntimeException("Seller not found"));
+
+        if (!"SELLER".equals(seller.getRole())) {
+            throw new RuntimeException(
+                    "Only SELLER users can create products"
+            );
+        }
+
+        product.setSeller(seller);
+
         return productService.saveProduct(product);
     }
 
-    // Get All Products
+    // =========================
+    // GET ALL PRODUCTS
+    // CUSTOMER HOME PAGE
+    // =========================
+
     @GetMapping
     public List<Product> getAllProducts() {
         return productService.getAllProducts();
     }
 
-    // Get Product By ID
+    // =========================
+    // GET PRODUCTS BY SELLER
+    // SELLER DASHBOARD
+    // =========================
+
+    @GetMapping("/seller/{sellerId}")
+    public List<Product> getProductsBySeller(
+            @PathVariable Long sellerId) {
+
+        return productService.getProductsBySeller(sellerId);
+    }
+
+    // =========================
+    // GET PRODUCT BY ID
+    // =========================
+
     @GetMapping("/{id}")
-    public Optional<Product> getProductById(@PathVariable Long id) {
+    public Optional<Product> getProductById(
+            @PathVariable Long id) {
+
         return productService.getProductById(id);
     }
 
-    // Get Product By Name
+    // =========================
+    // GET PRODUCTS BY NAME
+    // =========================
+
     @GetMapping("/name/{productName}")
     public List<Product> getProductByName(
             @PathVariable String productName) {
@@ -47,7 +94,10 @@ public class ProductController {
         return productService.getProductByName(productName);
     }
 
-    // Get Products By Category
+    // =========================
+    // GET PRODUCTS BY CATEGORY
+    // =========================
+
     @GetMapping("/category/{category}")
     public List<Product> getProductsByCategory(
             @PathVariable String category) {
@@ -55,7 +105,10 @@ public class ProductController {
         return productService.getProductsByCategory(category);
     }
 
-    // Update Product
+    // =========================
+    // UPDATE PRODUCT
+    // =========================
+
     @PutMapping("/{id}")
     public Product updateProduct(
             @PathVariable Long id,
@@ -64,9 +117,13 @@ public class ProductController {
         return productService.updateProduct(id, product);
     }
 
-    // Delete Product
+    // =========================
+    // DELETE PRODUCT
+    // =========================
+
     @DeleteMapping("/{id}")
-    public String deleteProduct(@PathVariable Long id) {
+    public String deleteProduct(
+            @PathVariable Long id) {
 
         productService.deleteProduct(id);
 

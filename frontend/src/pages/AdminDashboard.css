@@ -1,0 +1,541 @@
+/* =========================
+   ADMIN DASHBOARD
+========================= */
+
+.admin-dashboard {
+  min-height: 100vh;
+  display: flex;
+  background: #f5f7fb;
+  color: #111827;
+  font-family: Arial, sans-serif;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.admin-sidebar {
+  width: 250px;
+  min-height: 100vh;
+  background: #111827;
+  color: white;
+  padding: 25px 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.admin-logo {
+  font-size: 26px;
+  font-weight: 800;
+  padding: 10px 12px 25px;
+}
+
+.admin-logo span {
+  color: #6366f1;
+}
+
+.admin-panel-label {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 0 12px;
+  margin-bottom: 12px;
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+
+.admin-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-nav {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #d1d5db;
+  padding: 13px 14px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.admin-nav:hover {
+  background: #1f2937;
+  color: white;
+}
+
+.admin-nav.active {
+  background: #4f46e5;
+  color: white;
+}
+
+/* =========================
+   SIDEBAR BOTTOM
+========================= */
+
+.admin-sidebar-bottom {
+  margin-top: auto;
+}
+
+.admin-user-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 8px;
+  margin-bottom: 12px;
+  border-top: 1px solid #374151;
+}
+
+.admin-avatar {
+  width: 38px;
+  height: 38px;
+  background: #4f46e5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-user-mini strong {
+  display: block;
+  font-size: 13px;
+}
+
+.admin-user-mini small {
+  display: block;
+  color: #9ca3af;
+  margin-top: 3px;
+}
+
+.admin-logout {
+  width: 100%;
+  border: none;
+  padding: 12px;
+  border-radius: 9px;
+  background: #dc2626;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.admin-logout:hover {
+  background: #b91c1c;
+}
+
+/* =========================
+   MAIN
+========================= */
+
+.admin-main {
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  min-height: 100vh;
+  padding: 35px;
+  box-sizing: border-box;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+.admin-welcome-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6366f1;
+  letter-spacing: 1px;
+}
+
+.admin-topbar h1 {
+  margin: 8px 0 0;
+  font-size: 30px;
+}
+
+.admin-role-badge {
+  background: #111827;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* =========================
+   SECTION TITLE
+========================= */
+
+.admin-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.admin-section-title h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.admin-section-title p {
+  color: #6b7280;
+  margin-top: 7px;
+}
+
+/* =========================
+   STAT CARDS
+========================= */
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.admin-stat-card {
+  background: white;
+  border-radius: 15px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
+}
+
+.stat-icon.purple {
+  background: #ede9fe;
+}
+
+.stat-icon.blue {
+  background: #dbeafe;
+}
+
+.stat-icon.green {
+  background: #dcfce7;
+}
+
+.stat-icon.orange {
+  background: #ffedd5;
+}
+
+.admin-stat-card span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.admin-stat-card strong {
+  display: block;
+  font-size: 25px;
+  margin-top: 4px;
+}
+
+/* =========================
+   CONTENT CARD
+========================= */
+
+.admin-content-card {
+  background: white;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+  margin-bottom: 25px;
+}
+
+.card-heading h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.card-heading p {
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* =========================
+   SUMMARY
+========================= */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 22px;
+}
+
+.summary-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 18px;
+  border-radius: 12px;
+}
+
+.summary-item span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.summary-item strong {
+  display: block;
+  font-size: 24px;
+  margin-top: 6px;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.admin-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-align: left;
+  background: #f9fafb;
+  padding: 14px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.admin-table td {
+  padding: 16px 14px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.admin-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* =========================
+   ROLE BADGES
+========================= */
+
+.role-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.role-badge.admin {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.role-badge.seller {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.role-badge.customer {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* =========================
+   PRODUCTS
+========================= */
+
+.admin-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.admin-product-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px;
+  transition: 0.2s;
+}
+
+.admin-product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.product-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.product-category {
+  background: #eef2ff;
+  color: #4f46e5;
+  padding: 5px 9px;
+  border-radius: 15px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.product-id {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.admin-product-card h3 {
+  margin: 15px 0 8px;
+  font-size: 18px;
+}
+
+.product-description {
+  color: #6b7280;
+  font-size: 14px;
+  min-height: 40px;
+}
+
+.product-info {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.product-info span {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.product-info strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.product-delete-btn {
+  width: 100%;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.product-delete-btn:hover {
+  background: #fecaca;
+}
+
+/* =========================
+   STATES
+========================= */
+
+.admin-loading,
+.admin-empty {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1100px) {
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 750px) {
+  .admin-sidebar {
+    width: 210px;
+  }
+
+  .admin-main {
+    margin-left: 210px;
+    width: calc(100% - 210px);
+    padding: 20px;
+  }
+
+  .admin-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-topbar h1 {
+    font-size: 23px;
+  }
+}
+
+@media (max-width: 550px) {
+  .admin-sidebar {
+    position: relative;
+    width: 100%;
+    min-height: auto;
+  }
+
+  .admin-dashboard {
+    display: block;
+  }
+
+  .admin-main {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .admin-sidebar-bottom {
+    margin-top: 25px;
+  }
+
+  .admin-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+}

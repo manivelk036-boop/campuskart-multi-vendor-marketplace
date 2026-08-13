@@ -1,7 +1,7 @@
 package com.campuskart.backend.entity;
 
 import jakarta.persistence.*;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @Table(name = "products")
 public class Product {
@@ -20,14 +20,19 @@ public class Product {
 
     private String category;
 
-
+    // =========================
+    // SELLER
+    // =========================
+              @JsonIgnore
+@ManyToOne
+@JoinColumn(name = "seller_id")
+private User seller;
     // =========================
     // CONSTRUCTOR
     // =========================
 
     public Product() {
     }
-
 
     // =========================
     // GETTERS
@@ -57,6 +62,9 @@ public class Product {
         return category;
     }
 
+    public User getSeller() {
+        return seller;
+    }
 
     // =========================
     // SETTERS
@@ -84,5 +92,9 @@ public class Product {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public void setSeller(User seller) {
+        this.seller = seller;
     }
 }

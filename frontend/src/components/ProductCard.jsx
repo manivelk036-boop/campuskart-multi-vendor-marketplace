@@ -1,43 +1,63 @@
+
 function ProductCard({ product, onAddToCart }) {
+  const isOutOfStock = Number(product.quantity) <= 0;
+
   return (
     <div className="product-card">
 
+      {/* PRODUCT IMAGE / ICON */}
       <div className="product-image">
         🛍️
       </div>
 
+      {/* PRODUCT DETAILS */}
       <div className="product-info">
 
+        {/* CATEGORY */}
         <span className="category">
-          {product.category}
+          {product.category || "General"}
         </span>
 
+        {/* PRODUCT NAME */}
         <h3>
           {product.productName}
         </h3>
 
+        {/* DESCRIPTION */}
         <p className="description">
-          {product.description}
+          {product.description || "No description available."}
         </p>
 
-        <p className="stock">
-          Stock: {product.quantity}
+        {/* STOCK */}
+        <p
+          className={`stock ${
+            isOutOfStock ? "out-of-stock" : ""
+          }`}
+        >
+          {isOutOfStock
+            ? "❌ Out of Stock"
+            : `📦 ${product.quantity} available`}
         </p>
 
+        {/* PRICE + BUTTON */}
         <div className="product-bottom">
 
-          <strong>
-            ₹{Number(product.price).toLocaleString("en-IN")}
+          <strong className="product-price">
+            ₹{Number(product.price || 0).toLocaleString("en-IN")}
           </strong>
 
           <button
             className="add-btn"
-            onClick={() => onAddToCart(product)}
-            disabled={product.quantity <= 0}
+            onClick={() => {
+              if (!isOutOfStock) {
+                onAddToCart(product);
+              }
+            }}
+            disabled={isOutOfStock}
           >
-            {product.quantity > 0
-              ? "Add to Cart"
-              : "Out of Stock"}
+            {isOutOfStock
+              ? "Out of Stock"
+              : "🛒 Add to Cart"}
           </button>
 
         </div>

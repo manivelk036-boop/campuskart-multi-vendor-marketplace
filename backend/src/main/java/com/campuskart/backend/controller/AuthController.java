@@ -1,15 +1,21 @@
-package com.campuskart.backend.controller;
+﻿package com.campuskart.backend.controller;
 
 import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175"
+})
 public class AuthController {
 
     private final UserRepository userRepository;
@@ -38,7 +44,15 @@ public class AuthController {
                     .body("Invalid email or password");
         }
 
-        return ResponseEntity.ok(user);
+        // Safe response - NEVER send password to frontend
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("id", user.getId());
+        response.put("fullName", user.getFullName());
+        response.put("email", user.getEmail());
+        response.put("role", user.getRole());
+
+        return ResponseEntity.ok(response);
     }
 
     public static class LoginRequest {

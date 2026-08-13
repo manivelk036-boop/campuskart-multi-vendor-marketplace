@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
 import Cart from "./components/Cart";
 import Orders from "./pages/Orders";
 import Login from "./pages/Login";
-
+import SellerDashboard from "./pages/SellerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import "./App.css";
 
 function App() {
@@ -31,13 +31,13 @@ function App() {
   // LOGIN
   // =========================
 
-  const handleLogin = (user) => {
-    console.log("User logged in:", user);
+ const handleLogin = (user) => {
+  console.log("FULL USER:", user);
+  console.log("USER ROLE:", user.role);
 
-    setCurrentUser(user);
-    setIsLoggedIn(true);
-  };
-
+  setCurrentUser(user);
+  setIsLoggedIn(true);
+};
   // =========================
   // GET PRODUCTS
   // =========================
@@ -204,27 +204,60 @@ function App() {
   // LOGIN PAGE
   // =========================
 
-  if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
-  }
+ if (!isLoggedIn) {
+  return <Login onLogin={handleLogin} />;
+}
 
-  // =========================
-  // HOME PAGE
-  // =========================
-
+if (currentUser?.role === "SELLER") {
   return (
-    <div className="app">
+    <SellerDashboard
+      currentUser={currentUser}
+      onLogout={() => {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+        setCartItems([]);
+        setShowCart(false);
+        setShowOrders(false);
+      }}
+    />
+  );
+}
+
+if (currentUser?.role === "ADMIN") {
+  return (
+    <AdminDashboard
+      currentUser={currentUser}
+      onLogout={() => {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+        setCartItems([]);
+        setShowCart(false);
+        setShowOrders(false);
+      }}
+    />
+  );
+}
+
+// CUSTOMER continues here
+return (
+  <div className="app">
 
       {/* =========================
           NAVBAR
       ========================= */}
 
       <Navbar
-        cartCount={cartCount}
-        onCartClick={() => setShowCart(true)}
-        onOrdersClick={() => setShowOrders(true)}
-      />
-
+  cartCount={cartCount}
+  onCartClick={() => setShowCart(true)}
+  onOrdersClick={() => setShowOrders(true)}
+  onLogout={() => {
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+    setCartItems([]);
+    setShowCart(false);
+    setShowOrders(false);
+  }}
+/>
       {/* =========================
           HERO SECTION
       ========================= */}

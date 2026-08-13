@@ -1,13 +1,24 @@
-function Navbar({ cartCount, onCartClick, onOrdersClick }) {
+function Navbar({
+  cartCount,
+  onCartClick,
+  onOrdersClick,
+  onLogout,
+}) {
   return (
     <nav className="navbar">
 
-      {/* Logo */}
+      {/* =========================
+          LOGO
+      ========================= */}
+
       <div className="logo">
         Campus<span>Kart</span>
       </div>
 
-      {/* Navigation */}
+      {/* =========================
+          NAVIGATION
+      ========================= */}
+
       <div className="nav-links">
 
         <button
@@ -19,7 +30,7 @@ function Navbar({ cartCount, onCartClick, onOrdersClick }) {
               });
           }}
         >
-          Home
+          🏠 Home
         </button>
 
         <button
@@ -31,22 +42,54 @@ function Navbar({ cartCount, onCartClick, onOrdersClick }) {
               });
           }}
         >
-          Products
+          🛍️ Products
         </button>
 
         <button onClick={onOrdersClick}>
-          My Orders
+          📦 My Orders
         </button>
 
       </div>
 
-      {/* Cart */}
-      <button
-        className="cart-btn"
-        onClick={onCartClick}
+      {/* =========================
+          RIGHT ACTIONS
+      ========================= */}
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+        }}
       >
-        🛒 Cart ({cartCount})
-      </button>
+
+        {/* CART */}
+
+        <button
+          className="cart-btn"
+          onClick={onCartClick}
+        >
+          🛒 Cart ({cartCount})
+        </button>
+
+        {/* LOGOUT */}
+
+        <button
+          onClick={onLogout}
+          style={{
+            padding: "10px 16px",
+            border: "none",
+            borderRadius: "8px",
+            background: "#dc2626",
+            color: "white",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          🚪 Logout
+        </button>
+
+      </div>
 
     </nav>
   );

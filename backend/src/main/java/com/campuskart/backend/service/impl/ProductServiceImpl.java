@@ -3,6 +3,7 @@ package com.campuskart.backend.service.impl;
 import com.campuskart.backend.entity.Product;
 import com.campuskart.backend.repository.ProductRepository;
 import com.campuskart.backend.service.ProductService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,55 +16,81 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    // Create Product
+    // CREATE
     @Override
     public Product saveProduct(Product product) {
         return productRepository.save(product);
     }
 
-    // Get All Products
+    // GET ALL
     @Override
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    // Get Product By ID
+    // GET BY ID
     @Override
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }
 
-    // Get Product By Name
+    // GET BY NAME
     @Override
     public List<Product> getProductByName(String productName) {
         return productRepository.findByProductName(productName);
     }
 
-    // Get Products By Category
+    // GET BY CATEGORY
     @Override
     public List<Product> getProductsByCategory(String category) {
         return productRepository.findByCategory(category);
     }
 
-    // Update Product
+    // GET BY SELLER
+    @Override
+    public List<Product> getProductsBySeller(Long sellerId) {
+        return productRepository.findBySellerId(sellerId);
+    }
+
+    // UPDATE
     @Override
     public Product updateProduct(Long id, Product updatedProduct) {
 
         Product existingProduct = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Product not found"));
 
-        existingProduct.setProductName(updatedProduct.getProductName());
-        existingProduct.setDescription(updatedProduct.getDescription());
-        existingProduct.setPrice(updatedProduct.getPrice());
-        existingProduct.setQuantity(updatedProduct.getQuantity());
-        existingProduct.setCategory(updatedProduct.getCategory());
+        existingProduct.setProductName(
+                updatedProduct.getProductName()
+        );
+
+        existingProduct.setDescription(
+                updatedProduct.getDescription()
+        );
+
+        existingProduct.setPrice(
+                updatedProduct.getPrice()
+        );
+
+        existingProduct.setQuantity(
+                updatedProduct.getQuantity()
+        );
+
+        existingProduct.setCategory(
+                updatedProduct.getCategory()
+        );
 
         return productRepository.save(existingProduct);
     }
 
-    // Delete Product
+    // DELETE
     @Override
     public void deleteProduct(Long id) {
+
+        if (!productRepository.existsById(id)) {
+            throw new RuntimeException("Product not found");
+        }
+
         productRepository.deleteById(id);
     }
 }
