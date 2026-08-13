@@ -1,42 +1,78 @@
+/* =========================================================
+   CAMPUSKART - GLOBAL STYLES
+   ========================================================= */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: Arial, sans-serif;
+  font-family:
+    Inter,
+    Arial,
+    Helvetica,
+    sans-serif;
+
   background: #f7f8fc;
   color: #172033;
+
+  overflow-x: hidden;
 }
 
 button {
-  cursor: pointer;
   border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  text-decoration: none;
 }
 
 .app {
   min-height: 100vh;
 }
 
-/* ================= NAVBAR ================= */
+
+/* =========================================================
+   NAVBAR
+   ========================================================= */
 
 .navbar {
   height: 72px;
+
   padding: 0 7%;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+
+  background: rgba(255, 255, 255, 0.96);
+
   border-bottom: 1px solid #e8e8e8;
+
   position: sticky;
   top: 0;
+
   z-index: 100;
+
+  backdrop-filter: blur(12px);
 }
 
 .logo {
   font-size: 25px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .logo span {
@@ -45,13 +81,18 @@ button {
 
 .nav-links {
   display: flex;
+  align-items: center;
   gap: 25px;
 }
 
 .nav-links button {
   background: transparent;
+
   font-size: 15px;
+
   color: #555;
+
+  transition: 0.2s ease;
 }
 
 .nav-links button:hover {
@@ -60,39 +101,72 @@ button {
 
 .cart-btn {
   background: #5b5bd6;
+
   color: white;
+
   padding: 11px 18px;
+
   border-radius: 10px;
+
   font-weight: 600;
+
+  transition: 0.2s ease;
 }
 
-/* ================= HERO ================= */
+.cart-btn:hover {
+  background: #4b4bc5;
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   HERO
+   ========================================================= */
 
 .hero {
   min-height: 500px;
+
   padding: 70px 7%;
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
-  background: linear-gradient(135deg, #f0f0ff, #ffffff);
+
+  gap: 50px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f0f0ff,
+      #ffffff
+    );
 }
 
 .hero-content {
   max-width: 650px;
+  min-width: 0;
 }
 
 .hero-tag,
 .section-tag {
   color: #5b5bd6;
+
   font-size: 13px;
+
   font-weight: 700;
+
   letter-spacing: 1px;
+
   margin-bottom: 15px;
 }
 
 .hero h1 {
-  font-size: 52px;
+  font-size: clamp(38px, 5vw, 52px);
+
   line-height: 1.1;
+
   margin-bottom: 22px;
 }
 
@@ -102,38 +176,63 @@ button {
 
 .hero-description {
   font-size: 18px;
+
   line-height: 1.6;
+
   color: #666;
+
   margin-bottom: 30px;
+
+  max-width: 600px;
 }
 
 .shop-btn {
   background: #5b5bd6;
+
   color: white;
+
   padding: 14px 25px;
+
   border-radius: 10px;
+
   font-size: 16px;
+
   font-weight: 600;
+
+  transition: 0.2s ease;
 }
 
 .shop-btn:hover {
+  background: #4b4bc5;
+
   transform: translateY(-2px);
 }
 
 .hero-card {
   width: 300px;
   height: 300px;
+
+  flex-shrink: 0;
+
   border-radius: 25px;
+
   background: white;
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
+
+  box-shadow:
+    0 15px 45px rgba(0, 0, 0, 0.1);
+
   display: flex;
+
   flex-direction: column;
+
   justify-content: center;
+
   align-items: center;
 }
 
 .hero-icon {
   font-size: 75px;
+
   margin-bottom: 15px;
 }
 
@@ -143,13 +242,19 @@ button {
 
 .hero-card p {
   color: #777;
+
   margin-top: 8px;
 }
 
-/* ================= PRODUCTS ================= */
+
+/* =========================================================
+   PRODUCTS SECTION
+   ========================================================= */
 
 .products-section {
   padding: 70px 7%;
+
+  width: 100%;
 }
 
 .section-heading {
@@ -160,169 +265,404 @@ button {
   font-size: 35px;
 }
 
+
+/* =========================================================
+   PRODUCT GRID
+   IMPORTANT RESPONSIVE FIX
+   ========================================================= */
+
 .product-grid {
+  width: 100%;
+
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 25px;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(270px, 1fr)
+    );
+
+  gap: 24px;
+
+  align-items: stretch;
 }
 
-/* ================= PRODUCT CARD ================= */
+
+/* =========================================================
+   PRODUCT CARD
+   ========================================================= */
 
 .product-card {
+  width: 100%;
+
+  min-width: 0;
+
   background: white;
+
   border-radius: 16px;
+
   overflow: hidden;
+
   border: 1px solid #e8e8e8;
-  transition: 0.2s;
+
+  display: flex;
+
+  flex-direction: column;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.08);
 }
+
+
+/* =========================================================
+   PRODUCT IMAGE
+   ========================================================= */
 
 .product-image {
-  height: 190px;
-  background: #eeeeff;
+  width: 100%;
+
+  height: 175px;
+
+  flex-shrink: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eeeeff,
+      #f5f5ff
+    );
+
   display: flex;
+
   justify-content: center;
+
   align-items: center;
-  font-size: 65px;
 }
 
+.product-icon {
+  font-size: 58px;
+}
+
+
+/* =========================================================
+   PRODUCT INFO
+   ========================================================= */
+
 .product-info {
-  padding: 20px;
+  padding: 18px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  flex: 1;
+
+  min-width: 0;
 }
 
 .category {
   color: #5b5bd6;
-  font-size: 12px;
+
+  font-size: 11px;
+
   font-weight: 700;
+
   text-transform: uppercase;
+
+  letter-spacing: 0.5px;
+
+  margin-bottom: 7px;
 }
 
-.product-info h3 {
-  font-size: 21px;
-  margin: 8px 0;
+.product-name {
+  font-size: 19px;
+
+  line-height: 1.3;
+
+  margin-bottom: 8px;
+
+  overflow-wrap: anywhere;
 }
 
 .description {
   color: #777;
-  min-height: 40px;
+
+  font-size: 13px;
+
+  line-height: 1.45;
+
+  min-height: 38px;
+
+  display: -webkit-box;
+
+  -webkit-box-orient: vertical;
+
+  -webkit-line-clamp: 2;
+
+  overflow: hidden;
 }
+
+.stock {
+  margin-top: 10px;
+
+  color: #777;
+
+  font-size: 12px;
+
+  font-weight: 500;
+}
+
+.stock.out-of-stock {
+  color: #e05252;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   PRICE + ADD TO CART
+   ========================================================= */
 
 .product-bottom {
-  margin-top: 20px;
+  width: 100%;
+
+  margin-top: auto;
+
+  padding-top: 18px;
+
   display: flex;
-  justify-content: space-between;
+
   align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  min-width: 0;
 }
 
-.product-bottom strong {
-  font-size: 20px;
+.product-price {
+  font-size: 18px;
+
+  font-weight: 800;
+
+  color: #172033;
+
+  white-space: nowrap;
+
+  flex-shrink: 0;
 }
 
 .add-btn {
   background: #5b5bd6;
+
   color: white;
-  padding: 9px 15px;
+
+  padding: 9px 12px;
+
   border-radius: 8px;
+
+  font-size: 12px;
+
   font-weight: 600;
+
+  white-space: nowrap;
+
+  min-width: 0;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
-.stock {
-  margin-top: 12px;
+.add-btn:hover:not(:disabled) {
+  background: #4b4bc5;
+
+  transform: translateY(-1px);
+}
+
+.add-btn:disabled {
+  background: #b8b8c8;
+
+  color: white;
+}
+
+
+/* =========================================================
+   LOADING / EMPTY
+   ========================================================= */
+
+.loading {
+  text-align: center;
+
+  padding: 60px 20px;
+
   color: #777;
-  font-size: 13px;
+
+  font-size: 16px;
 }
 
-/* ================= CART ================= */
+.empty {
+  text-align: center;
+
+  padding: 60px 20px;
+
+  color: #777;
+}
+
+.empty h3 {
+  color: #333;
+
+  margin-bottom: 8px;
+}
+
+
+/* =========================================================
+   CART
+   ========================================================= */
 
 .cart-overlay,
 .orders-overlay {
   position: fixed;
+
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+
+  background:
+    rgba(0, 0, 0, 0.55);
+
   z-index: 1000;
+
   display: flex;
+
   justify-content: flex-end;
 }
 
 .cart-panel {
   width: 470px;
-  max-width: 95%;
+
+  max-width: 95vw;
+
   height: 100%;
+
   background: white;
+
   padding: 25px;
+
   overflow-y: auto;
 }
 
 .cart-header {
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
+
   margin-bottom: 25px;
 }
 
 .close-btn {
   background: #eee;
+
   width: 36px;
   height: 36px;
+
   border-radius: 50%;
+
   font-size: 17px;
+
+  transition: 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #ddd;
 }
 
 .cart-item {
   display: flex;
+
   align-items: center;
+
   gap: 15px;
+
   padding: 18px 0;
+
   border-bottom: 1px solid #eee;
 }
 
 .cart-item-image {
   width: 65px;
   height: 65px;
+
+  flex-shrink: 0;
+
   background: #eeeeff;
+
   border-radius: 10px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   font-size: 30px;
 }
 
 .cart-item-details {
   flex: 1;
+
+  min-width: 0;
 }
 
 .cart-item-details h3 {
   margin-bottom: 5px;
+
+  overflow-wrap: anywhere;
 }
 
 .cart-item-details p {
   color: #777;
+
   font-size: 13px;
+
   margin-bottom: 5px;
 }
 
 .quantity-control {
   display: flex;
+
   align-items: center;
+
   gap: 12px;
+
   margin-top: 10px;
 }
 
 .quantity-control button {
   width: 28px;
   height: 28px;
+
   border-radius: 6px;
+
   background: #eeeeff;
+
   font-size: 18px;
 }
 
 .remove-btn {
   background: transparent;
+
   color: #e05252;
+
   font-size: 12px;
 }
 
@@ -332,55 +672,85 @@ button {
 
 .total-row {
   display: flex;
+
   justify-content: space-between;
+
   font-size: 20px;
+
   margin-bottom: 20px;
 }
 
 .checkout-btn {
   width: 100%;
+
   padding: 15px;
+
   background: #5b5bd6;
+
   color: white;
+
   border-radius: 10px;
+
   font-size: 16px;
+
   font-weight: 700;
+}
+
+.checkout-btn:hover {
+  background: #4b4bc5;
 }
 
 .empty-cart,
 .empty {
   text-align: center;
+
   padding: 60px 20px;
+
   color: #777;
 }
 
 .empty-cart-icon {
   font-size: 55px;
+
   margin-bottom: 15px;
 }
 
-/* ================= ORDERS ================= */
+
+/* =========================================================
+   ORDERS
+   ========================================================= */
 
 .orders-overlay {
   justify-content: center;
+
   align-items: center;
+
   padding: 20px;
 }
 
 .orders-panel {
   width: 800px;
+
   max-width: 100%;
+
   max-height: 90vh;
+
   overflow-y: auto;
+
   background: white;
+
   border-radius: 18px;
+
   padding: 30px;
+
   position: relative;
 }
 
 .orders-panel > .close-btn {
   position: absolute;
+
   top: 20px;
+
   right: 20px;
 }
 
@@ -398,166 +768,189 @@ button {
 
 .order-card {
   border: 1px solid #e5e5e5;
+
   border-radius: 14px;
+
   padding: 20px;
+
   margin-bottom: 15px;
 }
 
 .order-top {
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
+
+  gap: 15px;
 }
 
 .order-label {
   color: #888;
+
   font-size: 11px;
+
   margin-bottom: 5px;
 }
 
 .status {
   padding: 7px 12px;
+
   border-radius: 20px;
+
   font-size: 12px;
+
   font-weight: 700;
+
   background: #fff3cd;
+
   color: #856404;
 }
 
 .order-details {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
   gap: 15px;
+
   margin-top: 20px;
+
   padding-top: 20px;
+
   border-top: 1px solid #eee;
 }
 
 .order-details div {
   display: flex;
+
   flex-direction: column;
+
   gap: 5px;
 }
 
 .order-details span {
   color: #888;
+
   font-size: 13px;
 }
 
-/* ================= FOOTER ================= */
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
 
 footer {
   padding: 35px 7%;
+
   background: #171725;
+
   color: white;
+
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
+
+  gap: 20px;
 }
 
 footer p {
   color: #aaa;
 }
 
-/* ================= RESPONSIVE ================= */
 
-@media (max-width: 768px) {
-
-  .navbar {
-    padding: 0 20px;
-  }
-
-  .nav-links {
-    display: none;
-  }
-
-  .hero {
-    padding: 50px 25px;
-    flex-direction: column;
-    gap: 40px;
-    text-align: center;
-  }
-
-  .hero h1 {
-    font-size: 38px;
-  }
-
-  .hero-card {
-    width: 250px;
-    height: 250px;
-  }
-
-  .products-section {
-    padding: 50px 25px;
-  }
-
-  .cart-panel {
-    width: 100%;
-  }
-
-  .order-details {
-    grid-template-columns: 1fr;
-  }
-
-  footer {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
-  }
-}
-/* =========================
+/* =========================================================
    LOGIN PAGE
-========================= */
+   ========================================================= */
 
 .login-page {
   min-height: 100vh;
+
   display: flex;
+
   background: #f7f8fc;
 }
 
-/* LEFT SIDE */
+
+/* LEFT */
 
 .login-left {
   width: 55%;
+
   min-height: 100vh;
+
   padding: 50px 70px;
-  background: linear-gradient(135deg, #111827, #1e293b);
+
+  background:
+    linear-gradient(
+      135deg,
+      #111827,
+      #1e293b
+    );
+
   color: white;
+
   position: relative;
+
   overflow: hidden;
 }
 
 .login-left::before {
   content: "";
+
   position: absolute;
+
   width: 450px;
   height: 450px;
+
   border-radius: 50%;
-  background: rgba(99, 102, 241, 0.15);
+
+  background:
+    rgba(99, 102, 241, 0.15);
+
   top: -180px;
+
   right: -120px;
 }
 
 .login-left::after {
   content: "";
+
   position: absolute;
+
   width: 350px;
   height: 350px;
+
   border-radius: 50%;
-  background: rgba(14, 165, 233, 0.12);
+
+  background:
+    rgba(14, 165, 233, 0.12);
+
   bottom: -150px;
+
   left: -100px;
 }
+
 
 /* BRAND */
 
 .brand {
   display: flex;
+
   align-items: center;
+
   gap: 12px;
+
   font-size: 26px;
+
   font-weight: 800;
+
   position: relative;
+
   z-index: 2;
 }
 
@@ -568,35 +961,50 @@ footer p {
 .brand-icon {
   width: 45px;
   height: 45px;
+
   border-radius: 12px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   background: #6366f1;
+
   font-size: 23px;
 }
 
-/* HERO */
+
+/* LOGIN HERO */
 
 .login-hero {
   max-width: 620px;
+
   margin-top: 150px;
+
   position: relative;
+
   z-index: 2;
 }
 
 .login-tag {
   color: #818cf8;
+
   font-size: 13px;
+
   font-weight: 700;
+
   letter-spacing: 1.5px;
+
   margin-bottom: 20px;
 }
 
 .login-hero h1 {
-  font-size: 55px;
+  font-size: clamp(38px, 5vw, 55px);
+
   line-height: 1.08;
-  margin: 0;
+
   font-weight: 800;
 }
 
@@ -606,29 +1014,49 @@ footer p {
 
 .login-hero > p:not(.login-tag) {
   color: #cbd5e1;
+
   font-size: 17px;
+
   line-height: 1.7;
+
   max-width: 520px;
+
   margin-top: 25px;
 }
+
 
 /* FEATURES */
 
 .features {
   display: flex;
+
+  flex-wrap: wrap;
+
   gap: 18px;
+
   margin-top: 40px;
 }
 
 .feature {
   display: flex;
+
   align-items: center;
+
   gap: 10px;
+
   padding: 12px 16px;
-  border: 1px solid rgba(255,255,255,0.12);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
   border-radius: 12px;
-  background: rgba(255,255,255,0.05);
+
+  background:
+    rgba(255, 255, 255, 0.05);
+
   font-size: 14px;
+
   color: #e2e8f0;
 }
 
@@ -636,50 +1064,73 @@ footer p {
   font-size: 20px;
 }
 
-/* RIGHT SIDE */
+
+/* RIGHT */
 
 .login-right {
   width: 45%;
+
   min-height: 100vh;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   padding: 40px;
 }
 
-/* CARD */
+
+/* LOGIN CARD */
 
 .login-card {
   width: 100%;
+
   max-width: 450px;
+
   background: white;
+
   padding: 45px;
+
   border-radius: 24px;
-  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.12);
+
+  box-shadow:
+    0 25px 70px
+    rgba(15, 23, 42, 0.12);
 }
 
 .welcome-icon {
   width: 58px;
   height: 58px;
+
   border-radius: 16px;
+
   background: #eef2ff;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   font-size: 27px;
+
   margin-bottom: 22px;
 }
 
 .login-card h2 {
   font-size: 30px;
-  margin: 0;
+
   color: #111827;
 }
 
 .login-subtitle {
   color: #64748b;
+
   margin: 8px 0 30px;
 }
+
 
 /* INPUT */
 
@@ -689,61 +1140,88 @@ footer p {
 
 .input-group label {
   display: block;
+
   font-size: 14px;
+
   font-weight: 600;
+
   color: #334155;
+
   margin-bottom: 8px;
 }
 
 .input-group input {
   width: 100%;
-  box-sizing: border-box;
+
   padding: 14px 16px;
-  border: 1px solid #dbe1ea;
+
+  border:
+    1px solid
+    #dbe1ea;
+
   border-radius: 11px;
+
   font-size: 15px;
+
   outline: none;
+
   transition: 0.2s;
 }
 
 .input-group input:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+
+  box-shadow:
+    0 0 0 4px
+    rgba(99, 102, 241, 0.1);
 }
 
 .password-label {
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
 }
 
 .password-label a {
   font-size: 12px;
+
   color: #6366f1;
-  text-decoration: none;
 }
+
 
 /* LOGIN BUTTON */
 
 .login-button {
   width: 100%;
-  border: none;
+
   border-radius: 11px;
+
   padding: 15px;
+
   background: #6366f1;
+
   color: white;
+
   font-size: 15px;
+
   font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s;
+
   display: flex;
+
   justify-content: center;
+
   align-items: center;
+
   gap: 10px;
+
+  transition: 0.2s;
 }
 
 .login-button:hover {
   background: #4f46e5;
+
   transform: translateY(-1px);
 }
 
@@ -751,48 +1229,118 @@ footer p {
   font-size: 20px;
 }
 
+
 /* DIVIDER */
 
 .divider {
   display: flex;
+
   align-items: center;
+
   gap: 15px;
+
   margin: 28px 0;
+
   color: #94a3b8;
+
   font-size: 13px;
 }
 
 .divider::before,
 .divider::after {
   content: "";
+
   height: 1px;
+
   flex: 1;
+
   background: #e2e8f0;
 }
+
 
 /* REGISTER */
 
 .register-text {
   text-align: center;
+
   color: #64748b;
+
   font-size: 14px;
 }
 
 .register-text strong {
   color: #6366f1;
+
   cursor: pointer;
 }
 
 .demo-text {
   text-align: center;
+
   color: #94a3b8;
+
   font-size: 11px;
+
   margin-top: 28px;
 }
 
-/* MOBILE */
+
+/* =========================================================
+   RESPONSIVE - LARGE LAPTOP
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  .navbar {
+    padding: 0 5%;
+  }
+
+  .hero {
+    padding: 60px 5%;
+  }
+
+  .products-section {
+    padding: 60px 5%;
+  }
+
+  .product-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+
+    gap: 20px;
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
 
 @media (max-width: 900px) {
+
+  .hero {
+    flex-direction: column;
+
+    text-align: center;
+
+    padding: 55px 30px;
+  }
+
+  .hero-content {
+    max-width: 750px;
+  }
+
+  .hero-card {
+    width: 250px;
+
+    height: 250px;
+  }
+
+  .product-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
 
   .login-page {
     display: block;
@@ -800,7 +1348,9 @@ footer p {
 
   .login-left {
     width: 100%;
+
     min-height: 330px;
+
     padding: 30px;
   }
 
@@ -822,13 +1372,164 @@ footer p {
 
   .login-right {
     width: 100%;
+
     min-height: auto;
+
     padding: 30px 20px;
-    box-sizing: border-box;
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .navbar {
+    height: 65px;
+
+    padding: 0 18px;
+  }
+
+  .logo {
+    font-size: 21px;
+  }
+
+  .cart-btn {
+    padding: 9px 13px;
+
+    font-size: 13px;
+  }
+
+  .hero {
+    padding: 45px 20px;
+
+    gap: 30px;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .hero-description {
+    font-size: 15px;
+  }
+
+  .hero-card {
+    width: 220px;
+
+    height: 220px;
+  }
+
+  .products-section {
+    padding: 45px 18px;
+  }
+
+  .section-heading h2 {
+    font-size: 29px;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+  }
+
+  .product-image {
+    height: 180px;
+  }
+
+  .product-info {
+    padding: 18px;
+  }
+
+  .product-bottom {
+    gap: 15px;
+  }
+
+  .add-btn {
+    padding: 10px 14px;
+
+    font-size: 12px;
+  }
+
+  .cart-panel {
+    width: 100%;
+
+    max-width: 100%;
+  }
+
+  .orders-panel {
+    padding: 20px;
+  }
+
+  .order-details {
+    grid-template-columns: 1fr;
+  }
+
+  footer {
+    flex-direction: column;
+
+    text-align: center;
+
+    padding: 30px 20px;
+  }
+
+  .login-left {
+    min-height: 280px;
+
+    padding: 25px 20px;
+  }
+
+  .brand {
+    font-size: 22px;
+  }
+
+  .login-hero {
+    margin-top: 45px;
+  }
+
+  .login-hero h1 {
+    font-size: 31px;
+  }
+
+  .login-right {
+    padding: 20px 15px;
   }
 
   .login-card {
-    padding: 30px 25px;
+    padding: 28px 22px;
+
+    border-radius: 18px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .product-bottom {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .product-price {
+    text-align: left;
+  }
+
+  .add-btn {
+    width: 100%;
+  }
+
+  .login-card {
+    padding: 24px 18px;
   }
 
 }

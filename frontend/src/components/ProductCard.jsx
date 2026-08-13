@@ -1,11 +1,10 @@
-
 function ProductCard({ product, onAddToCart }) {
   const isOutOfStock = Number(product.quantity) <= 0;
 
   return (
     <div className="product-card">
 
-      {/* PRODUCT IMAGE / ICON */}
+      {/* PRODUCT IMAGE */}
       <div className="product-image">
         🛍️
       </div>
@@ -13,51 +12,34 @@ function ProductCard({ product, onAddToCart }) {
       {/* PRODUCT DETAILS */}
       <div className="product-info">
 
-        {/* CATEGORY */}
         <span className="category">
           {product.category || "General"}
         </span>
 
-        {/* PRODUCT NAME */}
-        <h3>
-          {product.productName}
-        </h3>
+        <h3>{product.productName}</h3>
 
-        {/* DESCRIPTION */}
         <p className="description">
           {product.description || "No description available."}
         </p>
 
-        {/* STOCK */}
-        <p
-          className={`stock ${
-            isOutOfStock ? "out-of-stock" : ""
-          }`}
-        >
+        <p className={`stock ${isOutOfStock ? "out-of-stock" : ""}`}>
           {isOutOfStock
-            ? "❌ Out of Stock"
-            : `📦 ${product.quantity} available`}
+            ? "Out of stock"
+            : `Stock available: ${product.quantity}`}
         </p>
 
-        {/* PRICE + BUTTON */}
         <div className="product-bottom">
 
-          <strong className="product-price">
-            ₹{Number(product.price || 0).toLocaleString("en-IN")}
+          <strong>
+            ₹{Number(product.price).toLocaleString("en-IN")}
           </strong>
 
           <button
             className="add-btn"
-            onClick={() => {
-              if (!isOutOfStock) {
-                onAddToCart(product);
-              }
-            }}
             disabled={isOutOfStock}
+            onClick={() => onAddToCart(product)}
           >
-            {isOutOfStock
-              ? "Out of Stock"
-              : "🛒 Add to Cart"}
+            {isOutOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
 
         </div>
