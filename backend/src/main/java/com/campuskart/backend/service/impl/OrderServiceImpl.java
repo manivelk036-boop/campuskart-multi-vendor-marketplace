@@ -1,12 +1,15 @@
 package com.campuskart.backend.service.impl;
 
 import com.campuskart.backend.entity.Order;
+import com.campuskart.backend.entity.Product;
 import com.campuskart.backend.repository.OrderRepository;
+import com.campuskart.backend.repository.ProductRepository;
 import com.campuskart.backend.service.OrderService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +18,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
 
 
     // =========================
@@ -48,7 +54,8 @@ public class OrderServiceImpl implements OrderService {
 
 
     // =========================
-    // GET ORDERS BY USER ID
+    // GET ORDERS BY USER
+    // CUSTOMER ORDERS
     // =========================
 
     @Override
@@ -58,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
 
 
     // =========================
-    // GET ORDERS BY PRODUCT ID
+    // GET ORDERS BY PRODUCT
     // =========================
 
     @Override
@@ -78,6 +85,33 @@ public class OrderServiceImpl implements OrderService {
 
 
     // =========================
+    // GET ORDERS BY SELLER
+    // SELLER DASHBOARD
+    // =========================
+
+    @Override
+    public List<Order> getOrdersBySellerId(Long sellerId) {
+
+        List<Order> sellerOrders = new ArrayList<>();
+
+        // Get all products belonging to this seller
+        List<Product> sellerProducts =
+                productRepository.findBySellerId(sellerId);
+
+        // Find orders for each seller product
+        for (Product product : sellerProducts) {
+
+            List<Order> productOrders =
+                    orderRepository.findByProductId(product.getId());
+
+            sellerOrders.addAll(productOrders);
+        }
+
+        return sellerOrders;
+    }
+
+
+    // =========================
     // UPDATE ORDER
     // =========================
 
@@ -92,11 +126,25 @@ public class OrderServiceImpl implements OrderService {
             Order currentOrder =
                     existingOrder.get();
 
-            currentOrder.setUserId(order.getUserId());
-            currentOrder.setProductId(order.getProductId());
-            currentOrder.setQuantity(order.getQuantity());
-            currentOrder.setTotalPrice(order.getTotalPrice());
-            currentOrder.setStatus(order.getStatus());
+            currentOrder.setUserId(
+                    order.getUserId()
+            );
+
+            currentOrder.setProductId(
+                    order.getProductId()
+            );
+
+            currentOrder.setQuantity(
+                    order.getQuantity()
+            );
+
+            currentOrder.setTotalPrice(
+                    order.getTotalPrice()
+            );
+
+            currentOrder.setStatus(
+                    order.getStatus()
+            );
 
             return orderRepository.save(currentOrder);
         }

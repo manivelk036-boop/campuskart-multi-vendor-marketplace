@@ -7,27 +7,67 @@ import java.util.Optional;
 
 public interface OrderService {
 
-    // Create Order
+    // =========================
+    // CREATE ORDER
+    // =========================
+
     Order saveOrder(Order order);
 
-    // Get All Orders
+
+    // =========================
+    // GET ALL ORDERS
+    // =========================
+
     List<Order> getAllOrders();
 
-    // Get Order By ID
+
+    // =========================
+    // GET ORDER BY ID
+    // =========================
+
     Optional<Order> getOrderById(Long id);
 
-    // Get Orders By User ID
+
+    // =========================
+    // GET ORDERS BY USER
+    // CUSTOMER ORDERS
+    // =========================
+
     List<Order> getOrdersByUserId(Long userId);
 
-    // Get Orders By Product ID
+
+    // =========================
+    // GET ORDERS BY PRODUCT
+    // =========================
+
     List<Order> getOrdersByProductId(Long productId);
 
-    // Get Orders By Status
+
+    // =========================
+    // GET ORDERS BY STATUS
+    // =========================
+
     List<Order> getOrdersByStatus(String status);
 
-    // Update Order
+
+    // =========================
+    // GET ORDERS BY SELLER
+    // SELLER DASHBOARD
+    // =========================
+
+    List<Order> getOrdersBySellerId(Long sellerId);
+
+
+    // =========================
+    // UPDATE ORDER
+    // =========================
+
     Order updateOrder(Long id, Order order);
 
-    // Delete Order
+
+    // =========================
+    // DELETE ORDER
+    // =========================
+
     void deleteOrder(Long id);
 }
