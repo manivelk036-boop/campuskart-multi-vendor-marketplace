@@ -4,6 +4,7 @@ import com.campuskart.backend.entity.Order;
 import com.campuskart.backend.service.OrderService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,18 +22,14 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-
     // =========================
     // CREATE ORDER
     // =========================
 
     @PostMapping
-    public Order createOrder(
-            @RequestBody Order order) {
-
+    public Order createOrder(@RequestBody Order order) {
         return orderService.saveOrder(order);
     }
-
 
     // =========================
     // GET ALL ORDERS
@@ -41,10 +38,8 @@ public class OrderController {
 
     @GetMapping
     public List<Order> getAllOrders() {
-
         return orderService.getAllOrders();
     }
-
 
     // =========================
     // GET ORDER BY ID
@@ -57,7 +52,6 @@ public class OrderController {
         return orderService.getOrderById(id);
     }
 
-
     // =========================
     // GET CUSTOMER ORDERS
     // =========================
@@ -68,7 +62,6 @@ public class OrderController {
 
         return orderService.getOrdersByUserId(userId);
     }
-
 
     // =========================
     // GET SELLER ORDERS
@@ -82,7 +75,6 @@ public class OrderController {
         return orderService.getOrdersBySellerId(sellerId);
     }
 
-
     // =========================
     // GET ORDERS BY PRODUCT
     // =========================
@@ -93,7 +85,6 @@ public class OrderController {
 
         return orderService.getOrdersByProductId(productId);
     }
-
 
     // =========================
     // GET ORDERS BY STATUS
@@ -106,9 +97,8 @@ public class OrderController {
         return orderService.getOrdersByStatus(status);
     }
 
-
     // =========================
-    // UPDATE ORDER
+    // UPDATE COMPLETE ORDER
     // =========================
 
     @PutMapping("/{id}")
@@ -119,6 +109,59 @@ public class OrderController {
         return orderService.updateOrder(id, order);
     }
 
+    // =====================================================
+    // SELLER ORDER STATUS MANAGEMENT
+    // =====================================================
+
+    // ACCEPT ORDER
+    @PutMapping("/{id}/accept")
+    public ResponseEntity<Order> acceptOrder(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(id, "ACCEPTED")
+        );
+    }
+
+    // REJECT ORDER
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<Order> rejectOrder(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(id, "REJECTED")
+        );
+    }
+
+    // PROCESS ORDER
+    @PutMapping("/{id}/process")
+    public ResponseEntity<Order> processOrder(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(id, "PROCESSING")
+        );
+    }
+
+    // MARK ORDER READY
+    @PutMapping("/{id}/ready")
+    public ResponseEntity<Order> readyOrder(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(id, "READY")
+        );
+    }
+
+    // COMPLETE ORDER
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Order> completeOrder(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(id, "COMPLETED")
+        );
+    }
 
     // =========================
     // DELETE ORDER

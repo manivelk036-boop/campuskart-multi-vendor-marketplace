@@ -13,13 +13,11 @@ public interface OrderService {
 
     Order saveOrder(Order order);
 
-
     // =========================
     // GET ALL ORDERS
     // =========================
 
     List<Order> getAllOrders();
-
 
     // =========================
     // GET ORDER BY ID
@@ -27,14 +25,11 @@ public interface OrderService {
 
     Optional<Order> getOrderById(Long id);
 
-
     // =========================
-    // GET ORDERS BY USER
-    // CUSTOMER ORDERS
+    // GET CUSTOMER ORDERS
     // =========================
 
     List<Order> getOrdersByUserId(Long userId);
-
 
     // =========================
     // GET ORDERS BY PRODUCT
@@ -42,28 +37,29 @@ public interface OrderService {
 
     List<Order> getOrdersByProductId(Long productId);
 
-
     // =========================
     // GET ORDERS BY STATUS
     // =========================
 
     List<Order> getOrdersByStatus(String status);
 
-
     // =========================
-    // GET ORDERS BY SELLER
-    // SELLER DASHBOARD
+    // GET SELLER ORDERS
     // =========================
 
     List<Order> getOrdersBySellerId(Long sellerId);
 
+    // =========================
+    // UPDATE ORDER STATUS
+    // =========================
+
+    Order updateOrderStatus(Long id, String status);
 
     // =========================
-    // UPDATE ORDER
+    // UPDATE COMPLETE ORDER
     // =========================
 
     Order updateOrder(Long id, Order order);
-
 
     // =========================
     // DELETE ORDER

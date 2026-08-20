@@ -154,6 +154,25 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
+    // =========================
+// UPDATE ORDER STATUS
+// =========================
+
+@Override
+public Order updateOrderStatus(Long id, String status) {
+
+    Order order = orderRepository.findById(id)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "Order not found with ID: " + id
+                    )
+            );
+
+    order.setStatus(status);
+
+    return orderRepository.save(order);
+}
+
 
     // =========================
     // DELETE ORDER
