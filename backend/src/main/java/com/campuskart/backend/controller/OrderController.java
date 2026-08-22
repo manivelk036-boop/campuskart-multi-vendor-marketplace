@@ -154,14 +154,14 @@ public class OrderController {
     }
 
     // COMPLETE ORDER
-    @PutMapping("/{id}/complete")
-    public ResponseEntity<Order> completeOrder(
-            @PathVariable Long id) {
+  @PutMapping("/{id}/complete")
+public ResponseEntity<Order> completeOrder(
+        @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                orderService.updateOrderStatus(id, "COMPLETED")
-        );
-    }
+    return ResponseEntity.ok(
+            orderService.updateOrderStatus(id, "DELIVERED")
+    );
+}
 
     // =========================
     // DELETE ORDER
