@@ -5,6 +5,10 @@ const API_BASE = "http://localhost:8080/api";
 function SellerDashboard({ currentUser, onLogout }) {
   const sellerId = currentUser?.id;
 
+   
+  console.log("SELLER ID:", sellerId);
+  console.log("CURRENT USER:", currentUser);
+
   // =========================
   // STATE
   // =========================
@@ -354,29 +358,34 @@ function SellerDashboard({ currentUser, onLogout }) {
   // STATISTICS
   // =========================
 
-  const totalProducts = products.length;
+ const totalProducts = products.length;
 
-  const totalOrders = orders.length;
+const totalOrders = orders.length;
 
-  const pendingOrders = orders.filter(
-    (order) =>
-      String(order.status || "").toUpperCase() === "PENDING"
-  ).length;
+const pendingOrders = orders.filter(
+  (order) =>
+    String(order.status || "").toUpperCase() === "PENDING"
+).length;
 
-  const totalSales = orders.reduce(
+const totalSales = orders
+  .filter((order) => {
+    const status = String(order.status || "").toUpperCase();
+
+    return status === "DELIVERED" || status === "COMPLETED";
+  })
+  .reduce(
     (total, order) => total + Number(order.totalPrice || 0),
     0
   );
 
-  const totalStock = products.reduce(
-    (total, product) => total + Number(product.quantity || 0),
-    0
-  );
+const totalStock = products.reduce(
+  (total, product) => total + Number(product.quantity || 0),
+  0
+);
 
-  const lowStockProducts = products.filter(
-    (product) => Number(product.quantity || 0) <= 5
-  ).length;
-
+const lowStockProducts = products.filter(
+  (product) => Number(product.quantity || 0) <= 5
+).length;
   // =========================
   // PRODUCT MAP
   // =========================
