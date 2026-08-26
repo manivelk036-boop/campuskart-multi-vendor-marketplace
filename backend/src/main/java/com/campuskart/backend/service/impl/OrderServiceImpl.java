@@ -92,22 +92,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> getOrdersBySellerId(Long sellerId) {
 
-        List<Order> sellerOrders = new ArrayList<>();
-
-        // Get all products belonging to this seller
         List<Product> sellerProducts =
                 productRepository.findBySellerId(sellerId);
 
-        // Find orders for each seller product
-        for (Product product : sellerProducts) {
-
-            List<Order> productOrders =
-                    orderRepository.findByProductId(product.getId());
-
-            sellerOrders.addAll(productOrders);
+        if (sellerProducts == null || sellerProducts.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        return sellerOrders;
+        List<Long> productIds = new ArrayList<>();
+        for (Product product : sellerProducts) {
+            productIds.add(product.getId());
+        }
+
+        return orderRepository.findByProductIdIn(productIds);
     }
 
 
