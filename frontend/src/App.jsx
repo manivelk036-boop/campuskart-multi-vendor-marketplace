@@ -585,7 +585,7 @@ function App() {
             </button>
 
             <Orders
-              userId={currentUser?.id}
+                currentUser={currentUser}
             />
 
           </div>
