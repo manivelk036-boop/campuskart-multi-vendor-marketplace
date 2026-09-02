@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import "./Orders.css";
+
+const API_BASE = "http://localhost:8080/api";
+
 function Orders({ currentUser }) {
   const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -18,19 +21,39 @@ function Orders({ currentUser }) {
     setLoading(true);
     setError("");
 
-    axios
-      .get(`http://localhost:8080/api/orders/user/${userId}`)
-      .then((response) => {
-        setOrders(Array.isArray(response.data) ? response.data : []);
+    Promise.all([
+      axios.get(`${API_BASE}/orders/user/${userId}`),
+      axios.get(`${API_BASE}/products`),
+    ])
+      .then(([ordersResponse, productsResponse]) => {
+        setOrders(
+          Array.isArray(ordersResponse.data)
+            ? ordersResponse.data
+            : []
+        );
+
+        setProducts(
+          Array.isArray(productsResponse.data)
+            ? productsResponse.data
+            : []
+        );
       })
-      .catch((error) => {
-        console.error("Error fetching orders:", error);
+      .catch((err) => {
+        console.error("Error fetching orders/products:", err);
         setError("Unable to load your orders.");
       })
       .finally(() => {
         setLoading(false);
       });
   }, [userId]);
+
+  const getProductName = (productId) => {
+    const product = products.find(
+      (item) => Number(item.id) === Number(productId)
+    );
+
+    return product?.productName || `Product #${productId}`;
+  };
 
   const getStatusClass = (status) => {
     return String(status || "PENDING")
@@ -57,6 +80,10 @@ function Orders({ currentUser }) {
     }
   };
 
+  const isAtLeast = (status, states) => {
+    return states.includes(status);
+  };
+
   return (
     <section className="orders-section">
       <div className="orders-header">
@@ -81,7 +108,9 @@ function Orders({ currentUser }) {
       ) : (
         <div className="orders-list">
           {orders.map((order) => {
-            const status = String(order.status || "PENDING").toUpperCase();
+            const status = String(
+              order.status || "PENDING"
+            ).toUpperCase();
 
             return (
               <div className="order-card" key={order.id}>
@@ -91,15 +120,19 @@ function Orders({ currentUser }) {
                     <h3>#{order.id}</h3>
                   </div>
 
-                  <span className={`status ${getStatusClass(status)}`}>
+                  <span
+                    className={`status ${getStatusClass(status)}`}
+                  >
                     {status}
                   </span>
                 </div>
 
                 <div className="order-details">
                   <div>
-                    <span>Product ID</span>
-                    <strong>{order.productId}</strong>
+                    <span>Product</span>
+                    <strong>
+                      {getProductName(order.productId)}
+                    </strong>
                   </div>
 
                   <div>
@@ -110,24 +143,52 @@ function Orders({ currentUser }) {
                   <div>
                     <span>Total</span>
                     <strong>
-                      ₹{Number(order.totalPrice || 0).toLocaleString("en-IN")}
+                      ₹
+                      {Number(
+                        order.totalPrice || 0
+                      ).toLocaleString("en-IN")}
                     </strong>
                   </div>
                 </div>
 
                 <div className="order-tracking">
                   <strong>Tracking</strong>
+
                   <p>{getStatusMessage(status)}</p>
 
                   <div className="tracking-steps">
-                    <span className={status !== "PENDING" ? "done" : "active"}>
+                    <span
+                      className={
+                        isAtLeast(
+                          status,
+                          [
+                            "PENDING",
+                            "ACCEPTED",
+                            "PROCESSING",
+                            "SHIPPED",
+                            "DELIVERED",
+                            "COMPLETED",
+                          ]
+                        )
+                          ? "done"
+                          : ""
+                      }
+                    >
                       1. Placed
                     </span>
 
                     <span
                       className={
-                        ["ACCEPTED", "PROCESSING", "SHIPPED", "DELIVERED", "COMPLETED"]
-                          .includes(status)
+                        isAtLeast(
+                          status,
+                          [
+                            "ACCEPTED",
+                            "PROCESSING",
+                            "SHIPPED",
+                            "DELIVERED",
+                            "COMPLETED",
+                          ]
+                        )
                           ? "done"
                           : ""
                       }
@@ -137,8 +198,14 @@ function Orders({ currentUser }) {
 
                     <span
                       className={
-                        ["PROCESSING", "SHIPPED", "DELIVERED", "COMPLETED"].includes(
-                          status
+                        isAtLeast(
+                          status,
+                          [
+                            "PROCESSING",
+                            "SHIPPED",
+                            "DELIVERED",
+                            "COMPLETED",
+                          ]
                         )
                           ? "done"
                           : ""
@@ -149,7 +216,14 @@ function Orders({ currentUser }) {
 
                     <span
                       className={
-                        ["SHIPPED", "DELIVERED", "COMPLETED"].includes(status)
+                        isAtLeast(
+                          status,
+                          [
+                            "SHIPPED",
+                            "DELIVERED",
+                            "COMPLETED",
+                          ]
+                        )
                           ? "done"
                           : ""
                       }
@@ -159,7 +233,10 @@ function Orders({ currentUser }) {
 
                     <span
                       className={
-                        ["DELIVERED", "COMPLETED"].includes(status)
+                        isAtLeast(
+                          status,
+                          ["DELIVERED", "COMPLETED"]
+                        )
                           ? "done"
                           : ""
                       }
