@@ -8,6 +8,7 @@ import com.campuskart.backend.service.OrderService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,43 @@ public class OrderServiceImpl implements OrderService {
     // =========================
 
     @Override
+    @Transactional
     public Order saveOrder(Order order) {
+
+        Product product = order.getProductId() == null
+                ? null
+                : productRepository.findById(order.getProductId())
+                        .orElse(null);
+
+        if (product == null) {
+            throw new RuntimeException("Product not found");
+        }
+
+        if (order.getQuantity() == null
+                || order.getQuantity() <= 0) {
+            throw new RuntimeException(
+                    "Order quantity must be greater than zero");
+        }
+
+        if (product.getQuantity() == null
+                || order.getQuantity() > product.getQuantity()) {
+            throw new RuntimeException("Insufficient stock");
+        }
+
+        order.setTotalPrice(
+                product.getPrice() * order.getQuantity()
+        );
+
+        if (order.getStatus() == null
+                || order.getStatus().isBlank()) {
+            order.setStatus("PENDING");
+        }
+
+        product.setQuantity(
+                product.getQuantity() - order.getQuantity()
+        );
+
+        productRepository.save(product);
         return orderRepository.save(order);
     }
 
