@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-
-const API_BASE = "http://localhost:8080/api";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import apiClient from "../apiClient";
 
 function SellerDashboard({ currentUser, onLogout }) {
   const sellerId = currentUser?.id;
@@ -39,66 +38,59 @@ function SellerDashboard({ currentUser, onLogout }) {
   // LOAD PRODUCTS
   // =========================
 
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     if (!sellerId) return;
 
     try {
       setLoadingProducts(true);
 
-      const response = await fetch(
-        `${API_BASE}/products/seller/${sellerId}`
+      const response = await apiClient.get(
+        `/products/seller/${sellerId}`
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to load products");
-      }
-
-      const data = await response.json();
-      setProducts(Array.isArray(data) ? data : []);
+      setProducts(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error(err);
       setError("Unable to load your products.");
     } finally {
       setLoadingProducts(false);
     }
-  };
+  }, [sellerId]);
 
   // =========================
   // LOAD ORDERS
   // =========================
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     if (!sellerId) return;
 
     try {
       setLoadingOrders(true);
 
-      const response = await fetch(
-        `${API_BASE}/orders/seller/${sellerId}`
+      const response = await apiClient.get(
+        `/orders/seller/${sellerId}`
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to load orders");
-      }
-
-      const data = await response.json();
-      setOrders(Array.isArray(data) ? data : []);
+      setOrders(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error(err);
       setError("Unable to load customer orders.");
     } finally {
       setLoadingOrders(false);
     }
-  };
+  }, [sellerId]);
 
   // =========================
   // INITIAL LOAD
   // =========================
 
   useEffect(() => {
-    loadProducts();
-    loadOrders();
-  }, [sellerId]);
+    const timeoutId = window.setTimeout(() => {
+      void Promise.all([loadProducts(), loadOrders()]);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loadProducts, loadOrders]);
 
   // =========================
   // FORM CHANGE
@@ -167,29 +159,16 @@ function SellerDashboard({ currentUser, onLogout }) {
     try {
       setProductLoading(true);
 
-      const response = await fetch(
-        `${API_BASE}/products/seller/${sellerId}`,
+      await apiClient.post(
+        `/products/seller/${sellerId}`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
             productName: productForm.productName.trim(),
             category: productForm.category.trim(),
             price: Number(productForm.price),
             quantity: Number(productForm.quantity),
             description: productForm.description.trim(),
-          }),
         }
       );
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Failed to add product");
-      }
-
-      await response.json();
 
       setMessage("Product added successfully.");
       resetForm();
@@ -238,28 +217,16 @@ function SellerDashboard({ currentUser, onLogout }) {
     try {
       setProductLoading(true);
 
-      const response = await fetch(
-        `${API_BASE}/products/${editingProduct.id}`,
+      await apiClient.put(
+        `/products/${editingProduct.id}`,
         {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
             productName: productForm.productName.trim(),
             category: productForm.category.trim(),
             price: Number(productForm.price),
             quantity: Number(productForm.quantity),
             description: productForm.description.trim(),
-          }),
         }
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to update product");
-      }
-
-      await response.json();
 
       setMessage("Product updated successfully.");
       resetForm();
@@ -287,16 +254,7 @@ function SellerDashboard({ currentUser, onLogout }) {
     setError("");
 
     try {
-      const response = await fetch(
-        `${API_BASE}/products/${productId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete product");
-      }
+      await apiClient.delete(`/products/${productId}`);
 
       setMessage("Product deleted successfully.");
 
@@ -320,28 +278,20 @@ function SellerDashboard({ currentUser, onLogout }) {
     try {
       setOrderLoading(true);
 
-      const response = await fetch(
-        `${API_BASE}/orders/${order.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: order.userId,
-            productId: order.productId,
-            quantity: order.quantity,
-            totalPrice: order.totalPrice,
-            status: newStatus,
-          }),
-        }
-      );
+      const statusEndpoints = {
+        ACCEPTED: "accept",
+        REJECTED: "reject",
+        PROCESSING: "process",
+        READY: "ready",
+        DELIVERED: "complete",
+      };
 
-      if (!response.ok) {
-        throw new Error("Failed to update order");
+      const endpoint = statusEndpoints[newStatus];
+      if (!endpoint) {
+        throw new Error(`Unsupported order status: ${newStatus}`);
       }
 
-      await response.json();
+      await apiClient.put(`/orders/${order.id}/${endpoint}`);
 
       setMessage(`Order #${order.id} moved to ${newStatus}.`);
 
@@ -435,9 +385,9 @@ const lowStockProducts = products.filter(
         return "PROCESSING";
 
       case "PROCESSING":
-        return "SHIPPED";
+        return "READY";
 
-      case "SHIPPED":
+      case "READY":
         return "DELIVERED";
 
       default:

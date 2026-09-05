@@ -1,7 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import apiClient from "../apiClient";
 
 const API_BASE = "http://localhost:8080/api";
+
+const TRACKING_STEPS = [
+  { status: "PENDING", label: "Placed", icon: "✓" },
+  { status: "ACCEPTED", label: "Accepted", icon: "✓" },
+  { status: "PROCESSING", label: "Processing", icon: "⚙" },
+  { status: "SHIPPED", label: "Shipped", icon: "🚚" },
+  { status: "DELIVERED", label: "Delivered", icon: "✓" },
+];
 
 function Orders({ currentUser }) {
   const [orders, setOrders] = useState([]);
@@ -11,245 +20,438 @@ function Orders({ currentUser }) {
 
   const userId = currentUser?.id;
 
-  useEffect(() => {
+  // =====================================================
+  // FETCH ORDERS + PRODUCTS
+  // =====================================================
+
+  const fetchData = useCallback(async () => {
     if (!userId) {
       setLoading(false);
       setError("Please login to view your orders.");
       return;
     }
 
-    setLoading(true);
-    setError("");
+    try {
+      setError("");
 
-    Promise.all([
-      axios.get(`${API_BASE}/orders/user/${userId}`),
-      axios.get(`${API_BASE}/products`),
-    ])
-      .then(([ordersResponse, productsResponse]) => {
-        setOrders(
-          Array.isArray(ordersResponse.data)
-            ? ordersResponse.data
-            : []
-        );
+      const [ordersResponse, productsResponse] = await Promise.all([
+        apiClient.get(`/orders/user/${userId}`),
+        axios.get(`${API_BASE}/products`),
+      ]);
 
-        setProducts(
-          Array.isArray(productsResponse.data)
-            ? productsResponse.data
-            : []
-        );
-      })
-      .catch((err) => {
-        console.error("Error fetching orders/products:", err);
-        setError("Unable to load your orders.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      setOrders(
+        Array.isArray(ordersResponse.data)
+          ? ordersResponse.data
+          : []
+      );
+
+      setProducts(
+        Array.isArray(productsResponse.data)
+          ? productsResponse.data
+          : []
+      );
+    } catch (err) {
+      console.error("Error loading orders:", err);
+      setError("Unable to load your orders.");
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
-  const getProductName = (productId) => {
-    const product = products.find(
-      (item) => Number(item.id) === Number(productId)
+  // =====================================================
+  // INITIAL LOAD
+  // =====================================================
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchData]);
+
+  // =====================================================
+  // AUTO REFRESH
+  // =====================================================
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [userId, fetchData]);
+
+  // =====================================================
+  // FIND PRODUCT
+  // =====================================================
+
+  const getProduct = (productId) => {
+    return products.find(
+      (product) => Number(product.id) === Number(productId)
     );
-
-    return product?.productName || `Product #${productId}`;
   };
 
-  const getStatusClass = (status) => {
-    return String(status || "PENDING")
-      .toLowerCase()
-      .replace(/\s+/g, "-");
+  // =====================================================
+  // NORMALIZE STATUS
+  // =====================================================
+
+  const normalizeStatus = (status) => {
+    const normalized = String(status || "PENDING").toUpperCase();
+
+    // COMPLETED is treated as final delivery
+    if (normalized === "COMPLETED") {
+      return "DELIVERED";
+    }
+
+    return normalized;
   };
+
+  // =====================================================
+  // STATUS MESSAGE
+  // =====================================================
 
   const getStatusMessage = (status) => {
-    switch (String(status || "").toUpperCase()) {
+    switch (status) {
       case "PENDING":
         return "Order placed — waiting for seller";
+
       case "ACCEPTED":
         return "Order accepted by seller";
+
       case "PROCESSING":
         return "Seller is preparing your order";
+
       case "SHIPPED":
         return "Your order has been shipped";
+
       case "DELIVERED":
         return "Order delivered successfully";
+
       case "COMPLETED":
-        return "Order completed";
+        return "Order completed successfully";
+
       default:
         return "Order status updated";
     }
   };
 
-  const isAtLeast = (status, states) => {
-    return states.includes(status);
+  // =====================================================
+  // STEP CLASS
+  // =====================================================
+
+  const getStepClass = (currentStatus, stepStatus) => {
+    const normalizedStatus = normalizeStatus(currentStatus);
+
+    const currentIndex = TRACKING_STEPS.findIndex(
+      (step) => step.status === normalizedStatus
+    );
+
+    const stepIndex = TRACKING_STEPS.findIndex(
+      (step) => step.status === stepStatus
+    );
+
+    if (currentIndex === -1 || stepIndex === -1) {
+      return "";
+    }
+
+    if (stepIndex < currentIndex) {
+      return "done";
+    }
+
+    if (stepIndex === currentIndex) {
+      return "active";
+    }
+
+    return "";
   };
+
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  if (loading) {
+    return (
+      <section className="orders-section">
+        <div className="orders-header">
+          <p className="section-tag">PURCHASE HISTORY</p>
+          <h2>My Orders</h2>
+        </div>
+
+        <div className="loading">
+          Loading orders...
+        </div>
+      </section>
+    );
+  }
+
+  // =====================================================
+  // ERROR
+  // =====================================================
+
+  if (error) {
+    return (
+      <section className="orders-section">
+        <div className="orders-header">
+          <p className="section-tag">PURCHASE HISTORY</p>
+          <h2>My Orders</h2>
+        </div>
+
+        <div className="empty">
+          <h3>{error}</h3>
+          <button onClick={fetchData}>
+            Try Again
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  // =====================================================
+  // MAIN UI
+  // =====================================================
 
   return (
     <section className="orders-section">
+
       <div className="orders-header">
-        <p className="section-tag">PURCHASE HISTORY</p>
+        <p className="section-tag">
+          PURCHASE HISTORY
+        </p>
+
         <h2>My Orders</h2>
+
+        <p className="orders-subtitle">
+          Track your orders and delivery status
+        </p>
       </div>
 
-      {loading ? (
-        <p className="loading">Loading orders...</p>
-      ) : error ? (
+      {orders.length === 0 ? (
+
         <div className="empty">
-          <h3>{error}</h3>
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="empty">
-          <div className="empty-cart-icon">📦</div>
+          <div className="empty-cart-icon">
+            📦
+          </div>
+
           <h3>No orders yet</h3>
+
           <p>
-            Your orders will appear here after you place an order.
+            Your orders will appear here after
+            you place an order.
           </p>
         </div>
+
       ) : (
+
         <div className="orders-list">
+
           {orders.map((order) => {
-            const status = String(
+
+            const originalStatus = String(
               order.status || "PENDING"
             ).toUpperCase();
 
+            const status = normalizeStatus(
+              originalStatus
+            );
+
+            const product = getProduct(
+              order.productId
+            );
+
             return (
-              <div className="order-card" key={order.id}>
+
+              <div
+                className="order-card"
+                key={order.id}
+              >
+
+                {/* =================================
+                    ORDER HEADER
+                ================================= */}
+
                 <div className="order-top">
+
                   <div>
-                    <p className="order-label">ORDER ID</p>
-                    <h3>#{order.id}</h3>
+                    <p className="order-label">
+                      ORDER ID
+                    </p>
+
+                    <h3>
+                      #{order.id}
+                    </h3>
                   </div>
 
                   <span
-                    className={`status ${getStatusClass(status)}`}
+                    className={`status ${status.toLowerCase()}`}
                   >
-                    {status}
+                    {originalStatus}
                   </span>
+
                 </div>
 
-                <div className="order-details">
-                  <div>
-                    <span>Product</span>
-                    <strong>
-                      {getProductName(order.productId)}
-                    </strong>
+
+                {/* =================================
+                    PRODUCT INFORMATION
+                ================================= */}
+
+                <div className="product-info">
+
+                  <div className="product-main-info">
+
+                    <p className="product-label">
+                      PRODUCT
+                    </p>
+
+                    <h3>
+                      {product?.productName ||
+                        `Product #${order.productId}`}
+                    </h3>
+
+                    {product?.category && (
+                      <span className="product-category">
+                        {product.category}
+                      </span>
+                    )}
+
+                    {product?.description && (
+                      <p className="product-description">
+                        {product.description}
+                      </p>
+                    )}
+
+                    {!product && (
+                      <p className="product-description">
+                        Product details are no longer
+                        available.
+                      </p>
+                    )}
+
                   </div>
 
-                  <div>
-                    <span>Quantity</span>
-                    <strong>{order.quantity}</strong>
+
+                  {/* =================================
+                      ORDER DETAILS
+                  ================================= */}
+
+                  <div className="order-details">
+
+                    <div>
+                      <span>
+                        Unit Price
+                      </span>
+
+                      <strong>
+                        {product?.price != null
+                          ? `₹${Number(
+                              product.price
+                            ).toLocaleString("en-IN")}`
+                          : "Not available"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Quantity
+                      </span>
+
+                      <strong>
+                        {order.quantity}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Total
+                      </span>
+
+                      <strong>
+                        ₹
+                        {Number(
+                          order.totalPrice || 0
+                        ).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
                   </div>
 
-                  <div>
-                    <span>Total</span>
-                    <strong>
-                      ₹
-                      {Number(
-                        order.totalPrice || 0
-                      ).toLocaleString("en-IN")}
-                    </strong>
-                  </div>
                 </div>
+
+
+                {/* =================================
+                    ORDER TRACKING
+                ================================= */}
 
                 <div className="order-tracking">
-                  <strong>Tracking</strong>
 
-                  <p>{getStatusMessage(status)}</p>
+                  <div className="tracking-header">
+
+                    <strong>
+                      Order Tracking
+                    </strong>
+
+                    <span className="tracking-status">
+                      {originalStatus}
+                    </span>
+
+                  </div>
+
+                  <p className="tracking-message">
+                    {getStatusMessage(originalStatus)}
+                  </p>
+
 
                   <div className="tracking-steps">
-                    <span
-                      className={
-                        isAtLeast(
-                          status,
-                          [
-                            "PENDING",
-                            "ACCEPTED",
-                            "PROCESSING",
-                            "SHIPPED",
-                            "DELIVERED",
-                            "COMPLETED",
-                          ]
-                        )
-                          ? "done"
-                          : ""
-                      }
-                    >
-                      1. Placed
-                    </span>
 
-                    <span
-                      className={
-                        isAtLeast(
-                          status,
-                          [
-                            "ACCEPTED",
-                            "PROCESSING",
-                            "SHIPPED",
-                            "DELIVERED",
-                            "COMPLETED",
-                          ]
-                        )
-                          ? "done"
-                          : ""
-                      }
-                    >
-                      2. Accepted
-                    </span>
+                    {TRACKING_STEPS.map(
+                      (step, index) => {
 
-                    <span
-                      className={
-                        isAtLeast(
-                          status,
-                          [
-                            "PROCESSING",
-                            "SHIPPED",
-                            "DELIVERED",
-                            "COMPLETED",
-                          ]
-                        )
-                          ? "done"
-                          : ""
-                      }
-                    >
-                      3. Processing
-                    </span>
+                        const stepClass =
+                          getStepClass(
+                            originalStatus,
+                            step.status
+                          );
 
-                    <span
-                      className={
-                        isAtLeast(
-                          status,
-                          [
-                            "SHIPPED",
-                            "DELIVERED",
-                            "COMPLETED",
-                          ]
-                        )
-                          ? "done"
-                          : ""
-                      }
-                    >
-                      4. Shipped
-                    </span>
+                        return (
 
-                    <span
-                      className={
-                        isAtLeast(
-                          status,
-                          ["DELIVERED", "COMPLETED"]
-                        )
-                          ? "done"
-                          : ""
+                          <div
+                            key={step.status}
+                            className={`tracking-step ${stepClass}`}
+                          >
+
+                            <div className="step-circle">
+                              {stepClass === "done"
+                                ? "✓"
+                                : stepClass === "active"
+                                ? step.icon
+                                : index + 1}
+                            </div>
+
+                            <span>
+                              {step.label}
+                            </span>
+
+                          </div>
+
+                        );
                       }
-                    >
-                      5. Delivered
-                    </span>
+                    )}
+
                   </div>
+
                 </div>
+
               </div>
+
             );
           })}
+
         </div>
+
       )}
+
     </section>
   );
 }

@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import axios from "axios";
+import apiClient, { AUTH_STORAGE_KEY } from "../apiClient";
 
 function Login({ onLogin }) {
   // =========================
@@ -47,6 +48,11 @@ function Login({ onLogin }) {
       );
 
       console.log("Logged in user:", response.data);
+
+      localStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify(response.data)
+      );
 
       onLogin(response.data);
 
@@ -108,8 +114,8 @@ function Login({ onLogin }) {
 
       console.log("Creating account:", userData);
 
-      const response = await axios.post(
-        "http://localhost:8080/api/users",
+      const response = await apiClient.post(
+        "/users",
         userData
       );
 
