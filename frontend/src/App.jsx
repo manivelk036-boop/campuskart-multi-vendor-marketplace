@@ -33,6 +33,7 @@ function App() {
   const [showOrders, setShowOrders] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   // =========================================================
   // LOGIN
@@ -235,7 +236,11 @@ function App() {
   // PLACE ORDER
   // =========================================================
 
-  const placeOrder = async () => {
+  const placeOrder = async (paymentMethod) => {
+    if (isPlacingOrder) {
+      return;
+    }
+
     if (cartItems.length === 0) {
       alert("Your cart is empty!");
       return;
@@ -250,6 +255,8 @@ function App() {
     }
 
     try {
+      setIsPlacingOrder(true);
+
       // Validate stock before placing orders
       for (const item of cartItems) {
         if (
@@ -263,6 +270,8 @@ function App() {
           return;
         }
       }
+
+      const createdOrders = [];
 
       // Create order for each cart item
       for (const item of cartItems) {
@@ -281,14 +290,35 @@ function App() {
           orderData
         );
 
-        await apiClient.post(
+        const orderResponse = await apiClient.post(
           "/orders",
           orderData
         );
+
+        if (!orderResponse.data?.id) {
+          throw new Error("The order response did not include an order ID.");
+        }
+
+        createdOrders.push({
+          orderId: orderResponse.data.id,
+          amount: orderData.totalPrice,
+        });
+      }
+
+      if (paymentMethod !== "CASH_ON_DELIVERY") {
+        for (const order of createdOrders) {
+          await apiClient.post("/payments", {
+            orderId: order.orderId,
+            amount: order.amount,
+            paymentMethod,
+          });
+        }
       }
 
       alert(
-        "Order placed successfully!"
+        paymentMethod === "CASH_ON_DELIVERY"
+          ? "Order placed successfully. Pay on delivery."
+          : "Payment successful! Your order has been placed."
       );
 
       setCartItems([]);
@@ -308,8 +338,10 @@ function App() {
       }
 
       alert(
-        "Failed to place order. Please check your backend."
+        "We could not complete your order. Please try again."
       );
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
@@ -565,6 +597,7 @@ function App() {
           onPlaceOrder={
             placeOrder
           }
+          isProcessing={isPlacingOrder}
         />
       )}
 
