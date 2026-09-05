@@ -1,7 +1,9 @@
 package com.campuskart.backend.controller;
 
 import com.campuskart.backend.entity.Payment;
+import com.campuskart.backend.entity.Order;
 import com.campuskart.backend.entity.User;
+import com.campuskart.backend.repository.OrderRepository;
 import com.campuskart.backend.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,9 @@ public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;
+
+        @Autowired
+        private OrderRepository orderRepository;
 
     // CREATE PAYMENT
     @PostMapping
@@ -48,10 +53,14 @@ public class PaymentController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<Payment> getPaymentById(
-            @PathVariable Long id) {
+                        @PathVariable Long id,
+                        Authentication authentication) {
 
         return paymentService.getPaymentById(id)
-                .map(ResponseEntity::ok)
+                                .map(payment -> {
+                                        requirePaymentAccess(payment, authentication);
+                                        return ResponseEntity.ok(payment);
+                                })
                 .orElseGet(() ->
                         ResponseEntity.notFound().build()
                 );
@@ -61,10 +70,14 @@ public class PaymentController {
     @GetMapping("/order/{orderId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<Payment> getPaymentByOrderId(
-            @PathVariable Long orderId) {
+                        @PathVariable Long orderId,
+                        Authentication authentication) {
 
         return paymentService.getPaymentByOrderId(orderId)
-                .map(ResponseEntity::ok)
+                                .map(payment -> {
+                                        requirePaymentAccess(payment, authentication);
+                                        return ResponseEntity.ok(payment);
+                                })
                 .orElseGet(() ->
                         ResponseEntity.notFound().build()
                 );
@@ -94,4 +107,24 @@ public class PaymentController {
                 "Payment deleted successfully!"
         );
     }
+
+        private void requirePaymentAccess(
+                        Payment payment,
+                        Authentication authentication) {
+
+                if (authentication.getAuthorities().stream()
+                                .anyMatch(authority ->
+                                                "ROLE_ADMIN".equals(authority.getAuthority()))) {
+                        return;
+                }
+
+                User authenticatedUser = (User) authentication.getPrincipal();
+                Order order = orderRepository.findById(payment.getOrderId())
+                                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+                if (!authenticatedUser.getId().equals(order.getUserId())) {
+                        throw new org.springframework.security.access.AccessDeniedException(
+                                        "You can only access your own payments");
+                }
+        }
 }
