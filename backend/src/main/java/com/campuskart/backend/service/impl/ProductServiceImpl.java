@@ -43,7 +43,7 @@ public class ProductServiceImpl implements ProductService {
     // GET BY CATEGORY
     @Override
     public List<Product> getProductsByCategory(String category) {
-        return productRepository.findByCategory(category);
+        return productRepository.findByCategory_Name(category);
     }
 
     // GET BY SELLER
