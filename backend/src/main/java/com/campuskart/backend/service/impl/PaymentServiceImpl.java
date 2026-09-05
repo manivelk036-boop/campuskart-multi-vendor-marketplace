@@ -40,6 +40,11 @@ public class PaymentServiceImpl implements PaymentService {
                     "You are not authorized to pay for this order");
         }
 
+        if (paymentRepository.findByOrderId(payment.getOrderId()).isPresent()) {
+            throw new RuntimeException(
+                "Payment already exists for this order");
+        }
+
         if (payment.getPaymentMethod() == null
                 || payment.getPaymentMethod().isBlank()) {
             throw new RuntimeException("Payment method is required");
