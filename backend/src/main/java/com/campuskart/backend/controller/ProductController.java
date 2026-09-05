@@ -6,6 +6,9 @@ import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.ProductService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +34,7 @@ public class ProductController {
     // =========================
 
     @PostMapping("/seller/{sellerId}")
+    @PreAuthorize("hasRole('SELLER') and #sellerId == authentication.principal.id")
     public Product createProduct(
             @PathVariable Long sellerId,
             @RequestBody Product product) {
@@ -66,8 +70,12 @@ public class ProductController {
     // =========================
 
     @GetMapping("/seller/{sellerId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     public List<Product> getProductsBySeller(
-            @PathVariable Long sellerId) {
+            @PathVariable Long sellerId,
+            Authentication authentication) {
+
+        requireAdminOrOwnSellerProducts(sellerId, authentication);
 
         return productService.getProductsBySeller(sellerId);
     }
@@ -110,9 +118,13 @@ public class ProductController {
     // =========================
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     public Product updateProduct(
             @PathVariable Long id,
-            @RequestBody Product product) {
+            @RequestBody Product product,
+            Authentication authentication) {
+
+        requireAdminOrProductOwner(id, authentication);
 
         return productService.updateProduct(id, product);
     }
@@ -122,11 +134,54 @@ public class ProductController {
     // =========================
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     public String deleteProduct(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        requireAdminOrProductOwner(id, authentication);
 
         productService.deleteProduct(id);
 
         return "Product deleted successfully!";
+    }
+
+    private void requireAdminOrProductOwner(
+            Long productId,
+            Authentication authentication) {
+
+        if (authentication.getAuthorities().stream()
+                .anyMatch(authority ->
+                        "ROLE_ADMIN".equals(authority.getAuthority()))) {
+            return;
+        }
+
+        User authenticatedUser = (User) authentication.getPrincipal();
+        Product product = productService.getProductById(productId)
+                .orElseThrow(() ->
+                        new RuntimeException("Product not found"));
+
+        if (product.getSeller() == null
+                || !authenticatedUser.getId().equals(product.getSeller().getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You can only manage your own products");
+        }
+    }
+
+    private void requireAdminOrOwnSellerProducts(
+            Long sellerId,
+            Authentication authentication) {
+
+        if (authentication.getAuthorities().stream()
+                .anyMatch(authority ->
+                        "ROLE_ADMIN".equals(authority.getAuthority()))) {
+            return;
+        }
+
+        User authenticatedUser = (User) authentication.getPrincipal();
+        if (!authenticatedUser.getId().equals(sellerId)) {
+            throw new AccessDeniedException(
+                    "You can only access your own products");
+        }
     }
 }

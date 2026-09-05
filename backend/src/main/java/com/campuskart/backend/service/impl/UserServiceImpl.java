@@ -4,6 +4,7 @@ import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,8 +16,16 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public User saveUser(User user) {
+
+        user.setPassword(
+                passwordEncoder.encode(user.getPassword())
+        );
+
         return userRepository.save(user);
     }
 
@@ -39,11 +48,22 @@ public class UserServiceImpl implements UserService {
     public User updateUser(Long id, User updatedUser) {
 
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         existingUser.setFullName(updatedUser.getFullName());
         existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setPassword(updatedUser.getPassword());
+
+        if (updatedUser.getPassword() != null
+                && !updatedUser.getPassword().isBlank()) {
+
+            existingUser.setPassword(
+                    passwordEncoder.encode(
+                            updatedUser.getPassword()
+                    )
+            );
+        }
+
         existingUser.setRole(updatedUser.getRole());
 
         return userRepository.save(existingUser);
