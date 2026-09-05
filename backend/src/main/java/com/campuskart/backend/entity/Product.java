@@ -2,6 +2,7 @@ package com.campuskart.backend.entity;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "products")
 public class Product {
@@ -10,34 +11,41 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String productName;
 
     private String description;
 
+    @Column(nullable = false)
     private Double price;
 
+    @Column(nullable = false)
     private Integer quantity;
 
-    private String category;
+    // =========================
+    // CATEGORY
+    // =========================
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     // =========================
     // SELLER
     // =========================
-              @JsonIgnore
-@ManyToOne
-@JoinColumn(name = "seller_id")
-private User seller;
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    private User seller;
+
     // =========================
     // CONSTRUCTOR
     // =========================
-
     public Product() {
     }
 
     // =========================
     // GETTERS
     // =========================
-
     public Long getId() {
         return id;
     }
@@ -58,7 +66,7 @@ private User seller;
         return quantity;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return category;
     }
 
@@ -69,7 +77,6 @@ private User seller;
     // =========================
     // SETTERS
     // =========================
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -90,7 +97,7 @@ private User seller;
         this.quantity = quantity;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 
