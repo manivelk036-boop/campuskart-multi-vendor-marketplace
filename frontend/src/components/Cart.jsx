@@ -7,8 +7,10 @@ function Cart({
   onIncrease,
   onDecrease,
   onPlaceOrder,
+  isProcessing,
 }) {
   const [showCheckout, setShowCheckout] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("UPI");
 
   const subtotal = cartItems.reduce(
     (total, item) =>
@@ -34,7 +36,7 @@ function Cart({
   };
 
   const handleConfirmOrder = () => {
-    onPlaceOrder();
+    onPlaceOrder(paymentMethod);
   };
 
   return (
@@ -312,6 +314,51 @@ function Cart({
 
             </div>
 
+            {/* PAYMENT METHOD */}
+
+            <div className="payment-method-section">
+
+              <div className="payment-method-heading">
+                <h4>Payment Method</h4>
+                <span>Choose how you would like to pay</span>
+              </div>
+
+              <div className="payment-method-options">
+                {[
+                  ["UPI", "UPI", "Pay securely using UPI"],
+                  ["CARD", "Card", "Pay with your debit or credit card"],
+                  [
+                    "CASH_ON_DELIVERY",
+                    "Cash on Delivery",
+                    "Pay when your order arrives",
+                  ],
+                ].map(([value, label, description]) => (
+                  <label
+                    className={`payment-method-option ${
+                      paymentMethod === value ? "selected" : ""
+                    }`}
+                    key={value}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={value}
+                      checked={paymentMethod === value}
+                      onChange={(event) =>
+                        setPaymentMethod(event.target.value)
+                      }
+                      disabled={isProcessing}
+                    />
+                    <span className="payment-method-copy">
+                      <strong>{label}</strong>
+                      <small>{description}</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+            </div>
+
             {/* PRICE SUMMARY */}
 
             <div className="checkout-summary">
@@ -364,8 +411,13 @@ function Cart({
               <button
                 className="confirm-order-btn"
                 onClick={handleConfirmOrder}
+                disabled={isProcessing}
               >
-                ✓ Confirm & Place Order
+                {isProcessing
+                  ? "Processing..."
+                  : paymentMethod === "CASH_ON_DELIVERY"
+                  ? "✓ Place Order"
+                  : "✓ Pay Now"}
               </button>
 
             </div>
