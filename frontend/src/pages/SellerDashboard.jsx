@@ -163,7 +163,7 @@ function SellerDashboard({ currentUser, onLogout }) {
         `/products/seller/${sellerId}`,
         {
             productName: productForm.productName.trim(),
-            category: productForm.category.trim(),
+            category: { name: productForm.category.trim() },
             price: Number(productForm.price),
             quantity: Number(productForm.quantity),
             description: productForm.description.trim(),
@@ -190,7 +190,7 @@ function SellerDashboard({ currentUser, onLogout }) {
 
     setProductForm({
       productName: product.productName || "",
-      category: product.category || "",
+      category: product.category?.name || "",
       price: product.price ?? "",
       quantity: product.quantity ?? "",
       description: product.description || "",
@@ -221,7 +221,7 @@ function SellerDashboard({ currentUser, onLogout }) {
         `/products/${editingProduct.id}`,
         {
             productName: productForm.productName.trim(),
-            category: productForm.category.trim(),
+            category: { name: productForm.category.trim() },
             price: Number(productForm.price),
             quantity: Number(productForm.quantity),
             description: productForm.description.trim(),
@@ -796,7 +796,7 @@ const lowStockProducts = products.filter(
 
                         <td>
                           <span className="category-badge">
-                            {product.category || "General"}
+                            {product.category?.name || "General"}
                           </span>
                         </td>
 

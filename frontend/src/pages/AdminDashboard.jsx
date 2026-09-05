@@ -458,7 +458,7 @@ function AdminDashboard({ currentUser, onLogout }) {
                       <div className="product-top">
 
                         <span className="product-category">
-                          {product.category}
+                          {product.category?.name || "General"}
                         </span>
 
                         <span className="product-id">

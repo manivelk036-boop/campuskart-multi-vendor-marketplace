@@ -16,6 +16,9 @@ public class Product {
 
     private String description;
 
+    @Column(length = 1000)
+    private String imageUrl;
+
     @Column(nullable = false)
     private Double price;
 
@@ -58,6 +61,10 @@ public class Product {
         return description;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
     public Double getPrice() {
         return price;
     }
@@ -87,6 +94,10 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public void setPrice(Double price) {

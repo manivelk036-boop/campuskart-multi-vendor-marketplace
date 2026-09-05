@@ -38,8 +38,8 @@ function Cart({
   };
 
   return (
-    <div className="cart-overlay">
-      <div className="cart-panel">
+    <div className={`cart-overlay ${showCheckout ? "checkout-overlay" : ""}`}>
+      <div className={`cart-panel ${showCheckout ? "checkout-panel" : ""}`}>
 
         {/* =====================================================
             HEADER
@@ -95,7 +95,16 @@ function Cart({
                 >
 
                   <div className="cart-item-image">
-                    🛍️
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.productName}
+                      />
+                    ) : (
+                      <span className="cart-image-placeholder" aria-hidden="true">
+                        🛍️
+                      </span>
+                    )}
                   </div>
 
                   <div className="cart-item-details">
@@ -105,7 +114,7 @@ function Cart({
                     </h3>
 
                     <p>
-                      {item.category}
+                      {item.category?.name || "General"}
                     </p>
 
                     <strong>
@@ -242,13 +251,28 @@ function Cart({
 
                   <div className="checkout-item-info">
 
-                    <strong>
-                      {item.productName}
-                    </strong>
+                    <div className="checkout-item-image">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.productName}
+                        />
+                      ) : (
+                        <span className="cart-image-placeholder" aria-hidden="true">
+                          🛍️
+                        </span>
+                      )}
+                    </div>
 
-                    <span>
-                      {item.category}
-                    </span>
+                    <div className="checkout-item-copy">
+                      <strong>
+                        {item.productName}
+                      </strong>
+
+                      <span>
+                        {item.category?.name || "General"}
+                      </span>
+                    </div>
 
                   </div>
 

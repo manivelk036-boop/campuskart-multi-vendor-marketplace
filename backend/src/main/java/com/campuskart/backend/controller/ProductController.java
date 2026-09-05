@@ -1,7 +1,9 @@
 package com.campuskart.backend.controller;
 
 import com.campuskart.backend.entity.Product;
+import com.campuskart.backend.entity.Category;
 import com.campuskart.backend.entity.User;
+import com.campuskart.backend.repository.CategoryRepository;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.ProductService;
 
@@ -29,15 +31,25 @@ public class ProductController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     // =========================
     // CREATE PRODUCT FOR SELLER
     // =========================
 
     @PostMapping("/seller/{sellerId}")
-    @PreAuthorize("hasRole('SELLER') and #sellerId == authentication.principal.id")
+    @PreAuthorize("hasRole('SELLER')")
     public Product createProduct(
             @PathVariable Long sellerId,
-            @RequestBody Product product) {
+            @RequestBody Product product,
+            Authentication authentication) {
+
+        User authenticatedUser = (User) authentication.getPrincipal();
+        if (!authenticatedUser.getId().equals(sellerId)) {
+            throw new AccessDeniedException(
+                    "You can only create products for your own seller account");
+        }
 
         User seller = userRepository.findById(sellerId)
                 .orElseThrow(() ->
@@ -49,6 +61,7 @@ public class ProductController {
             );
         }
 
+        product.setCategory(resolveCategory(product));
         product.setSeller(seller);
 
         return productService.saveProduct(product);
@@ -126,6 +139,8 @@ public class ProductController {
 
         requireAdminOrProductOwner(id, authentication);
 
+        product.setCategory(resolveCategory(product));
+
         return productService.updateProduct(id, product);
     }
 
@@ -183,5 +198,21 @@ public class ProductController {
             throw new AccessDeniedException(
                     "You can only access your own products");
         }
+    }
+
+    private Category resolveCategory(
+            Product product) {
+
+        if (product.getCategory() == null
+                || product.getCategory().getName() == null
+                || product.getCategory().getName().isBlank()) {
+            throw new IllegalArgumentException("Category is required");
+        }
+
+        String categoryName = product.getCategory().getName().trim();
+
+        return categoryRepository.findByNameIgnoreCase(categoryName)
+            .orElseGet(() -> categoryRepository.save(
+                new Category(null, categoryName)));
     }
 }

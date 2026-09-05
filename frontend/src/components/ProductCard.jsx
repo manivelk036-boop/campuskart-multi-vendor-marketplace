@@ -1,19 +1,33 @@
+import { useState } from "react";
+
 function ProductCard({ product, onAddToCart }) {
+  const [imageFailed, setImageFailed] = useState(false);
   const isOutOfStock = Number(product.quantity) <= 0;
+  const imageUrl = product.imageUrl || product.image;
 
   return (
     <div className="product-card">
 
       {/* PRODUCT IMAGE */}
       <div className="product-image">
-        🛍️
+        {imageUrl && !imageFailed ? (
+          <img
+            src={imageUrl}
+            alt={product.productName}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <span className="product-placeholder" aria-hidden="true">
+            🛍️
+          </span>
+        )}
       </div>
 
       {/* PRODUCT DETAILS */}
       <div className="product-info">
 
         <span className="category">
-          {product.category || "General"}
+          {product.category?.name || "General"}
         </span>
 
         <h3>{product.productName}</h3>

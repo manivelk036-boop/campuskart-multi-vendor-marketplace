@@ -312,7 +312,7 @@ function Orders({ currentUser }) {
 
                     {product?.category && (
                       <span className="product-category">
-                        {product.category}
+                        {product.category?.name || "General"}
                       </span>
                     )}
 
