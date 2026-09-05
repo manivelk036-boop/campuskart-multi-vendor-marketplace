@@ -1,6 +1,7 @@
 package com.campuskart.backend.controller;
 
 import com.campuskart.backend.entity.User;
+import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,10 +18,30 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     // Create User
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public User createUser(@RequestBody User user) {
+
+        if (user.getRole() == null || user.getRole().isBlank()) {
+            user.setRole("CUSTOMER");
+        } else {
+            user.setRole(user.getRole().trim().toUpperCase());
+        }
+
+        if (!"CUSTOMER".equals(user.getRole())
+                && !"SELLER".equals(user.getRole())) {
+            throw new RuntimeException(
+                    "Only CUSTOMER or SELLER roles are allowed during registration");
+        }
+
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException(
+                    "An account with this email already exists");
+        }
+
         return userService.saveUser(user);
     }
 
