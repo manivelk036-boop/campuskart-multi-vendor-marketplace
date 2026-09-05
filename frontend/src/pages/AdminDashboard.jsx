@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import apiClient from "../apiClient";
 import "./AdminDashboard.css";
 
 function AdminDashboard({ currentUser, onLogout }) {
@@ -35,9 +36,7 @@ function AdminDashboard({ currentUser, onLogout }) {
 
   const loadUsers = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:8080/api/users"
-      );
+      const response = await apiClient.get("/users");
 
       setUsers(response.data);
     } catch (error) {
@@ -52,8 +51,11 @@ function AdminDashboard({ currentUser, onLogout }) {
   // =========================
 
   useEffect(() => {
-    loadProducts();
-    loadUsers();
+    const timeoutId = window.setTimeout(() => {
+      void Promise.all([loadProducts(), loadUsers()]);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   // =========================
@@ -68,9 +70,7 @@ function AdminDashboard({ currentUser, onLogout }) {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(
-        `http://localhost:8080/api/products/${id}`
-      );
+      await apiClient.delete(`/products/${id}`);
 
       alert("Product deleted successfully!");
 

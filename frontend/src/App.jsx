@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import apiClient, { getStoredAuth, AUTH_STORAGE_KEY } from "./apiClient";
 
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
@@ -18,8 +19,8 @@ function App() {
   // AUTHENTICATION
   // =========================================================
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => getStoredAuth());
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(getStoredAuth()));
 
   // =========================================================
   // CUSTOMER STATE
@@ -59,6 +60,7 @@ function App() {
 
     setCurrentUser(null);
     setIsLoggedIn(false);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
 
     setProducts([]);
     setCartItems([]);
@@ -279,8 +281,8 @@ function App() {
           orderData
         );
 
-        await axios.post(
-          `${API_BASE_URL}/orders`,
+        await apiClient.post(
+          "/orders",
           orderData
         );
       }
