@@ -6,6 +6,8 @@ import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.CategoryRepository;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,6 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
+@Tag(name = "Products", description = "Product catalog, seller catalog management, and product discovery endpoints")
 @CrossOrigin(origins = {
         "http://localhost:5173",
         "http://localhost:5174",
@@ -38,6 +41,7 @@ public class ProductController {
     // CREATE PRODUCT FOR SELLER
     // =========================
 
+    @Operation(summary = "Create a new product for an authenticated seller")
     @PostMapping("/seller/{sellerId}")
     @PreAuthorize("hasRole('SELLER')")
     public Product createProduct(
@@ -72,6 +76,7 @@ public class ProductController {
     // CUSTOMER HOME PAGE
     // =========================
 
+    @Operation(summary = "List all products for the store front")
     @GetMapping
     public List<Product> getAllProducts() {
         return productService.getAllProducts();
@@ -82,6 +87,7 @@ public class ProductController {
     // SELLER DASHBOARD
     // =========================
 
+    @Operation(summary = "List products owned by a specific seller")
     @GetMapping("/seller/{sellerId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     public List<Product> getProductsBySeller(
@@ -97,6 +103,7 @@ public class ProductController {
     // GET PRODUCT BY ID
     // =========================
 
+    @Operation(summary = "Fetch a product by identifier")
     @GetMapping("/{id}")
     public Optional<Product> getProductById(
             @PathVariable Long id) {
@@ -108,6 +115,7 @@ public class ProductController {
     // GET PRODUCTS BY NAME
     // =========================
 
+    @Operation(summary = "Search products by product name")
     @GetMapping("/name/{productName}")
     public List<Product> getProductByName(
             @PathVariable String productName) {
@@ -119,6 +127,7 @@ public class ProductController {
     // GET PRODUCTS BY CATEGORY
     // =========================
 
+    @Operation(summary = "Browse products by category")
     @GetMapping("/category/{category}")
     public List<Product> getProductsByCategory(
             @PathVariable String category) {
@@ -130,6 +139,7 @@ public class ProductController {
     // UPDATE PRODUCT
     // =========================
 
+    @Operation(summary = "Update a product as an admin or owning seller")
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     public Product updateProduct(
@@ -148,6 +158,7 @@ public class ProductController {
     // DELETE PRODUCT
     // =========================
 
+    @Operation(summary = "Delete a product as an admin or owning seller")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     public String deleteProduct(
