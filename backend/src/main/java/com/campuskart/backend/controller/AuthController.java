@@ -3,6 +3,8 @@ package com.campuskart.backend.controller;
 import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.security.JwtService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Login and authentication endpoints")
 @CrossOrigin(origins = {
         "http://localhost:5173",
         "http://localhost:5174",
@@ -34,6 +37,7 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
+    @Operation(summary = "Authenticate a user and return a JWT token")
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody LoginRequest request) {

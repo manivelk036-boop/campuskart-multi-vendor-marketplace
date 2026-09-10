@@ -5,6 +5,8 @@ import com.campuskart.backend.entity.Product;
 import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.ProductRepository;
 import com.campuskart.backend.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/orders")
+@Tag(name = "Orders", description = "Order creation, retrieval, seller workflow, and fulfillment status endpoints")
 @CrossOrigin(origins = {
         "http://localhost:5173",
         "http://localhost:5174",
@@ -35,6 +38,7 @@ public class OrderController {
     // CREATE ORDER
     // =========================
 
+    @Operation(summary = "Create an order for the authenticated customer")
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER') and #order.userId == authentication.principal.id")
     public Order createOrder(
@@ -47,6 +51,7 @@ public class OrderController {
     // ADMIN
     // =========================
 
+    @Operation(summary = "List all orders as an administrator")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<Order> getAllOrders() {
@@ -57,6 +62,7 @@ public class OrderController {
     // GET ORDER BY ID
     // =========================
 
+    @Operation(summary = "Fetch an order by identifier with role-aware access checks")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'SELLER')")
     public Optional<Order> getOrderById(
@@ -73,6 +79,7 @@ public class OrderController {
     // GET CUSTOMER ORDERS
     // =========================
 
+    @Operation(summary = "Fetch all orders placed by a customer")
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('CUSTOMER') and #userId == authentication.principal.id")
     public List<Order> getOrdersByUser(
@@ -86,6 +93,7 @@ public class OrderController {
     // SELLER DASHBOARD
     // =========================
 
+    @Operation(summary = "Fetch all orders for products sold by a seller")
     @GetMapping("/seller/{sellerId}")
     @PreAuthorize("hasRole('SELLER') and #sellerId == authentication.principal.id")
     public List<Order> getOrdersBySeller(
@@ -98,6 +106,7 @@ public class OrderController {
     // GET ORDERS BY PRODUCT
     // =========================
 
+    @Operation(summary = "Fetch orders for a product while enforcing seller ownership")
     @GetMapping("/product/{productId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     public List<Order> getOrdersByProduct(
@@ -113,6 +122,7 @@ public class OrderController {
     // GET ORDERS BY STATUS
     // =========================
 
+    @Operation(summary = "Fetch orders by fulfillment status as an administrator")
     @GetMapping("/status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
     public List<Order> getOrdersByStatus(
@@ -125,6 +135,7 @@ public class OrderController {
     // UPDATE COMPLETE ORDER
     // =========================
 
+    @Operation(summary = "Admin update of an order record")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Order updateOrder(
@@ -139,6 +150,7 @@ public class OrderController {
     // =====================================================
 
     // ACCEPT ORDER
+    @Operation(summary = "Accept an order as the owning seller")
     @PutMapping("/{id}/accept")
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<Order> acceptOrder(
@@ -153,6 +165,7 @@ public class OrderController {
     }
 
     // REJECT ORDER
+    @Operation(summary = "Reject an order as the owning seller")
     @PutMapping("/{id}/reject")
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<Order> rejectOrder(
@@ -167,6 +180,7 @@ public class OrderController {
     }
 
     // PROCESS ORDER
+    @Operation(summary = "Move an order to processing as the owning seller")
     @PutMapping("/{id}/process")
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<Order> processOrder(
@@ -181,6 +195,7 @@ public class OrderController {
     }
 
     // MARK ORDER READY
+    @Operation(summary = "Mark an order ready for delivery as the owning seller")
     @PutMapping("/{id}/ready")
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<Order> readyOrder(
@@ -195,6 +210,7 @@ public class OrderController {
     }
 
     // COMPLETE ORDER
+    @Operation(summary = "Complete and deliver an order as the owning seller")
   @PutMapping("/{id}/complete")
 @PreAuthorize("hasRole('SELLER')")
 public ResponseEntity<Order> completeOrder(
@@ -212,6 +228,7 @@ public ResponseEntity<Order> completeOrder(
     // DELETE ORDER
     // =========================
 
+    @Operation(summary = "Delete an order as an administrator")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public String deleteOrder(

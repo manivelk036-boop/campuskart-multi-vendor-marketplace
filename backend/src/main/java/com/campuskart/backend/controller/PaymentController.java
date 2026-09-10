@@ -5,6 +5,8 @@ import com.campuskart.backend.entity.Order;
 import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.OrderRepository;
 import com.campuskart.backend.service.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments")
+@Tag(name = "Payments", description = "Payment creation, lookup, order payment status, and admin payment management endpoints")
 @CrossOrigin(origins = {
         "http://localhost:5173",
         "http://localhost:5174",
@@ -29,6 +32,7 @@ public class PaymentController {
         private OrderRepository orderRepository;
 
     // CREATE PAYMENT
+    @Operation(summary = "Create a payment for the authenticated customer order")
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Payment> createPayment(
@@ -43,6 +47,7 @@ public class PaymentController {
     }
 
     // GET ALL PAYMENTS - ADMIN
+    @Operation(summary = "List all payments as an administrator")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<Payment> getAllPayments() {
@@ -50,6 +55,7 @@ public class PaymentController {
     }
 
     // GET PAYMENT BY ID
+    @Operation(summary = "Fetch a payment by identifier with customer/admin access checks")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<Payment> getPaymentById(
@@ -67,6 +73,7 @@ public class PaymentController {
     }
 
     // GET PAYMENT BY ORDER
+    @Operation(summary = "Fetch a payment by order identifier")
     @GetMapping("/order/{orderId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<Payment> getPaymentByOrderId(
@@ -84,6 +91,7 @@ public class PaymentController {
     }
 
     // UPDATE PAYMENT STATUS - ADMIN
+    @Operation(summary = "Update a payment status as an administrator")
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Payment> updatePaymentStatus(
@@ -96,6 +104,7 @@ public class PaymentController {
     }
 
     // DELETE PAYMENT - ADMIN
+    @Operation(summary = "Delete a payment record as an administrator")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deletePayment(
