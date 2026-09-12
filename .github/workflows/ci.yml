@@ -11,6 +11,20 @@ jobs:
     name: Backend Build & Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root@123
+          MYSQL_DATABASE: campuskart_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot@123"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,9 +39,9 @@ jobs:
       - name: Run backend tests
         working-directory: backend
         env:
-          DB_URL: jdbc:h2:mem:testdb
-          DB_USERNAME: sa
-          DB_PASSWORD:
+          DB_URL: jdbc:mysql://127.0.0.1:3306/campuskart_db
+          DB_USERNAME: root
+          DB_PASSWORD: root@123
           JWT_SECRET: CampusKartTestSecretKeyForCI2026CampusKart123456789
           JWT_EXPIRATION: 86400000
         run: ./mvnw test
