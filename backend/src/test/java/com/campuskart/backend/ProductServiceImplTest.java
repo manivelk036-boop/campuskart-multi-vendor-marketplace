@@ -9,6 +9,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +21,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -107,6 +114,39 @@ class ProductServiceImplTest {
         assertEquals(1, result.size());
         assertEquals(product, result.get(0));
         verify(productRepository).findBySellerId(9L);
+    }
+
+    @Test
+    void searchProductsSupportsKeywordCaseInsensitiveAndCategoryAndPriceSort() {
+        Category electronics = new Category(1L, "Electronics");
+        Product product = new Product();
+        product.setProductName("iphone charger");
+        product.setDescription("Compact USB charger");
+        product.setCategory(electronics);
+        product.setPrice(250.0);
+
+        Page<Product> page = new PageImpl<>(List.of(product));
+        Pageable pageable = PageRequest.of(0, 12);
+
+        when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+
+        Page<Product> result = productService.searchProducts("IPHONE", "Electronics", 100.0, 500.0, "price-low-high", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(product, result.getContent().get(0));
+        verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    void searchProductsReturnsEmptyPageWhenNoProductMatchesFilters() {
+        Pageable pageable = PageRequest.of(0, 12);
+        when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty(pageable));
+
+        Page<Product> result = productService.searchProducts("nonexistent", "Electronics", 100.0, 500.0, "relevance", pageable);
+
+        assertTrue(result.getContent().isEmpty());
+        assertEquals(0, result.getTotalElements());
+        verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test

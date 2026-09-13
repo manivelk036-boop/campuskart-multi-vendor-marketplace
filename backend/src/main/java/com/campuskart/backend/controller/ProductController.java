@@ -10,6 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -127,6 +130,27 @@ public class ProductController {
     // GET PRODUCTS BY CATEGORY
     // =========================
 
+    @Operation(summary = "Search and filter products by keyword, category, price range, and sorting")
+    @GetMapping("/search")
+    public Page<Product> searchProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String minPrice,
+            @RequestParam(required = false) String maxPrice,
+            @RequestParam(defaultValue = "relevance") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        Double parsedMinPrice = parseOptionalPrice(minPrice);
+        Double parsedMaxPrice = parseOptionalPrice(maxPrice);
+        if (parsedMinPrice != null && parsedMaxPrice != null && parsedMinPrice > parsedMaxPrice) {
+            throw new RuntimeException("Minimum price cannot be greater than maximum price");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        return productService.searchProducts(keyword, category, parsedMinPrice, parsedMaxPrice, sort, pageable);
+    }
+
     @Operation(summary = "Browse products by category")
     @GetMapping("/category/{category}")
     public List<Product> getProductsByCategory(
@@ -170,6 +194,18 @@ public class ProductController {
         productService.deleteProduct(id);
 
         return "Product deleted successfully!";
+    }
+
+    private Double parseOptionalPrice(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException ex) {
+            throw new RuntimeException("Invalid price value provided");
+        }
     }
 
     private void requireAdminOrSeller(Authentication authentication) {

@@ -2,9 +2,15 @@ package com.campuskart.backend.service.impl;
 
 import com.campuskart.backend.entity.Product;
 import com.campuskart.backend.repository.ProductRepository;
+import com.campuskart.backend.repository.ProductSpecifications;
 import com.campuskart.backend.service.ProductService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -55,6 +61,52 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getProductsBySeller(Long sellerId) {
         return productRepository.findBySellerId(sellerId);
+    }
+
+    @Override
+    public Page<Product> searchProducts(String keyword,
+                                         String category,
+                                         Double minPrice,
+                                         Double maxPrice,
+                                         String sort,
+                                         Pageable pageable) {
+        Specification<Product> specification = (root, query, cb) -> cb.conjunction();
+
+        Specification<Product> keywordSpec = ProductSpecifications.hasKeyword(keyword);
+        if (keywordSpec != null) {
+            specification = specification.and(keywordSpec);
+        }
+
+        Specification<Product> categorySpec = ProductSpecifications.hasCategory(category);
+        if (categorySpec != null) {
+            specification = specification.and(categorySpec);
+        }
+
+        if (minPrice != null) {
+            specification = specification.and(ProductSpecifications.hasMinPrice(minPrice));
+        }
+
+        if (maxPrice != null) {
+            specification = specification.and(ProductSpecifications.hasMaxPrice(maxPrice));
+        }
+
+        if (pageable == null) {
+            pageable = PageRequest.of(0, 12);
+        }
+
+        Sort sortOption = switch (sort == null || sort.isBlank() ? "relevance" : sort.toLowerCase(Locale.ROOT)) {
+            case "price-low-high" -> Sort.by("price").ascending();
+            case "price-high-low" -> Sort.by("price").descending();
+            case "newest-first" -> Sort.by("id").descending();
+            default -> Sort.by("id").descending();
+        };
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                sortOption);
+
+        return productRepository.findAll(specification, sortedPageable);
     }
 
     // UPDATE
