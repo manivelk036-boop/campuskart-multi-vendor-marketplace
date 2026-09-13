@@ -1,2 +1,4 @@
 .vscode/
-target/
+target/backend/current-error.txt
+
+backend/current-error.txt
