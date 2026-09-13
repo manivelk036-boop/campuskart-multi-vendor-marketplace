@@ -95,6 +95,34 @@ class UserControllerTest {
     }
 
     @Test
+    void mixedCaseAdminRoleRegistrationIsRejected() {
+        User user = user("admin.case@example.com", "admin");
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> userController.createUser(user));
+
+        assertEquals(
+                "Only CUSTOMER or SELLER roles are allowed during registration",
+                exception.getMessage());
+        verify(userRepository, never()).findByEmail(user.getEmail());
+        verify(userService, never()).saveUser(user);
+    }
+
+    @Test
+    void registrationNormalizesEmailToLowerCaseForLookupAndStorage() {
+        User user = user("Customer@Example.COM", "CUSTOMER");
+        when(userRepository.findByEmail("customer@example.com"))
+                .thenReturn(Optional.empty());
+        when(userService.saveUser(user)).thenReturn(user);
+
+        User result = userController.createUser(user);
+
+        assertEquals("customer@example.com", result.getEmail());
+        verify(userService).saveUser(user);
+    }
+
+    @Test
     void duplicateEmailRegistrationIsRejected() {
         User user = user("duplicate@example.com", "CUSTOMER");
         when(userRepository.findByEmail(user.getEmail()))

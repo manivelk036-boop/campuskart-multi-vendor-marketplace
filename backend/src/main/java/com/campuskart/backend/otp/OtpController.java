@@ -38,11 +38,13 @@ public class OtpController {
             throw new RuntimeException("Email is required");
         }
 
-        if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+
+        if (!normalizedEmail.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             throw new RuntimeException("Invalid email");
         }
 
-        otpService.sendOtp(email);
+        otpService.sendOtp(normalizedEmail);
 
         return ResponseEntity.ok(
                 Map.of("message", "OTP sent successfully")
@@ -60,7 +62,9 @@ public class OtpController {
             throw new RuntimeException("Email is required");
         }
 
-        if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+
+        if (!normalizedEmail.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             throw new RuntimeException("Invalid email");
         }
 
@@ -68,13 +72,12 @@ public class OtpController {
             throw new RuntimeException("OTP is required");
         }
 
-        boolean valid = otpService.verifyOtp(email, otp);
+        boolean valid = otpService.verifyOtp(normalizedEmail, otp);
 
         if (!valid) {
             throw new RuntimeException("Invalid or expired OTP");
         }
 
-        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
         Optional<User> userOptional = userRepository.findByEmail(normalizedEmail);
 
         if (userOptional.isEmpty()) {

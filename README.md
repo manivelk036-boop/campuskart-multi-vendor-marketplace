@@ -197,9 +197,11 @@ JWT_SECRET
 JWT_EXPIRATION
 MAIL_USERNAME
 MAIL_PASSWORD
+ADMIN_EMAIL
+ADMIN_PASSWORD
 ```
 
-A project-level example file is provided at `.env.example` with placeholder values.
+All secrets and one-time credentials should stay local. Use the project-level example file `.env.example` as a placeholder template only, and do not commit real database passwords, mail app passwords, JWT secrets, or OTP/email flows in source control.
 
 Run:
 

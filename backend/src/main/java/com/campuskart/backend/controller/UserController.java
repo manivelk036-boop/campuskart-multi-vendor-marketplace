@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @RestController
@@ -29,10 +30,32 @@ public class UserController {
     @PostMapping
     public User createUser(@RequestBody User user) {
 
+        if (user == null) {
+            throw new RuntimeException("User payload is required");
+        }
+
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        String normalizedEmail = user.getEmail()
+                .trim()
+                .toLowerCase(Locale.ROOT);
+
+        if (!normalizedEmail.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new RuntimeException("Invalid email");
+        }
+
+        user.setEmail(normalizedEmail);
+
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new RuntimeException("Password is required");
+        }
+
         if (user.getRole() == null || user.getRole().isBlank()) {
             user.setRole("CUSTOMER");
         } else {
-            user.setRole(user.getRole().trim().toUpperCase());
+            user.setRole(user.getRole().trim().toUpperCase(Locale.ROOT));
         }
 
         if (!"CUSTOMER".equals(user.getRole())
@@ -41,7 +64,7 @@ public class UserController {
                     "Only CUSTOMER or SELLER roles are allowed during registration");
         }
 
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
             throw new RuntimeException(
                     "An account with this email already exists");
         }
