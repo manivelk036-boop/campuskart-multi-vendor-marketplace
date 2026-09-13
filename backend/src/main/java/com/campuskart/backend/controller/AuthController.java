@@ -1,6 +1,7 @@
 package com.campuskart.backend.controller;
 
 import com.campuskart.backend.entity.User;
+import com.campuskart.backend.otp.OtpService;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.security.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,24 +28,49 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final OtpService otpService;
 
     public AuthController(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
+            JwtService jwtService,
+            OtpService otpService) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.otpService = otpService;
     }
 
-    @Operation(summary = "Authenticate a user and return a JWT token")
+    @Operation(summary = "Validate credentials and send a one-time OTP to the supplied email")
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody LoginRequest request) {
 
-        Optional<User> userOptional =
-                userRepository.findByEmail(request.getEmail());
+        String email = request.getEmail() == null
+                ? ""
+                : request.getEmail().trim().toLowerCase(Locale.ROOT);
+        String password = request.getPassword();
+
+        if (email.isBlank()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Email is required");
+        }
+
+        if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Invalid email");
+        }
+
+        if (password == null || password.isBlank()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Password is required");
+        }
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isEmpty()) {
             return ResponseEntity
@@ -53,23 +80,18 @@ public class AuthController {
 
         User user = userOptional.get();
 
-        if (!passwordEncoder.matches(
-                request.getPassword(),
-                user.getPassword())) {
-
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             return ResponseEntity
                     .badRequest()
                     .body("Invalid email or password");
         }
 
-        Map<String, Object> response = new HashMap<>();
+        otpService.sendOtp(email);
 
-    response.put(
-        "token",
-        jwtService.generateToken(user.getEmail(), user.getRole()));
-        response.put("id", user.getId());
-        response.put("fullName", user.getFullName());
-        response.put("email", user.getEmail());
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "OTP sent successfully. Please verify the code.");
+        response.put("requiresOtp", true);
+        response.put("email", email);
         response.put("role", user.getRole());
 
         return ResponseEntity.ok(response);
@@ -81,6 +103,11 @@ public class AuthController {
         private String password;
 
         public LoginRequest() {
+        }
+
+        public LoginRequest(String email, String password) {
+            this.email = email;
+            this.password = password;
         }
 
         public String getEmail() {

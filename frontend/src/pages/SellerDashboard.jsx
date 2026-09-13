@@ -32,6 +32,7 @@ function SellerDashboard({ currentUser, onLogout }) {
     price: "",
     quantity: "",
     description: "",
+    imageUrl: "",
   });
 
   // =========================
@@ -116,6 +117,7 @@ function SellerDashboard({ currentUser, onLogout }) {
       price: "",
       quantity: "",
       description: "",
+      imageUrl: "",
     });
 
     setEditingProduct(null);
@@ -167,6 +169,7 @@ function SellerDashboard({ currentUser, onLogout }) {
             price: Number(productForm.price),
             quantity: Number(productForm.quantity),
             description: productForm.description.trim(),
+            imageUrl: productForm.imageUrl?.trim() || "",
         }
       );
 
@@ -175,7 +178,7 @@ function SellerDashboard({ currentUser, onLogout }) {
       await loadProducts();
     } catch (err) {
       console.error(err);
-      setError("Failed to add product.");
+      setError(err?.response?.data?.message || err?.message || "Failed to add product.");
     } finally {
       setProductLoading(false);
     }
@@ -194,6 +197,7 @@ function SellerDashboard({ currentUser, onLogout }) {
       price: product.price ?? "",
       quantity: product.quantity ?? "",
       description: product.description || "",
+      imageUrl: product.imageUrl || "",
     });
 
     window.scrollTo({
@@ -225,6 +229,7 @@ function SellerDashboard({ currentUser, onLogout }) {
             price: Number(productForm.price),
             quantity: Number(productForm.quantity),
             description: productForm.description.trim(),
+            imageUrl: productForm.imageUrl?.trim() || "",
         }
       );
 
@@ -233,7 +238,7 @@ function SellerDashboard({ currentUser, onLogout }) {
       await loadProducts();
     } catch (err) {
       console.error(err);
-      setError("Failed to update product.");
+      setError(err?.response?.data?.message || err?.message || "Failed to update product.");
     } finally {
       setProductLoading(false);
     }
@@ -685,6 +690,24 @@ const lowStockProducts = products.filter(
                   placeholder="Describe your product..."
                   rows="4"
                 />
+              </div>
+
+              <div className="form-group full-width">
+                <label>Image URL</label>
+
+                <input
+                  type="url"
+                  name="imageUrl"
+                  value={productForm.imageUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/product.jpg"
+                />
+
+                {editingProduct?.imageUrl && !productForm.imageUrl && (
+                  <div className="existing-image-preview">
+                    <img src={editingProduct.imageUrl} alt="Existing product preview" />
+                  </div>
+                )}
               </div>
 
             </div>

@@ -2,7 +2,6 @@ package com.campuskart.backend;
 
 import com.campuskart.backend.entity.Category;
 import com.campuskart.backend.entity.Product;
-import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.ProductRepository;
 import com.campuskart.backend.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.Test;

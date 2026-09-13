@@ -187,6 +187,20 @@ Navigate to:
 cd backend
 ```
 
+Set the required environment variables locally before starting the app, including:
+
+```text
+DB_URL
+DB_USERNAME
+DB_PASSWORD
+JWT_SECRET
+JWT_EXPIRATION
+MAIL_USERNAME
+MAIL_PASSWORD
+```
+
+A project-level example file is provided at `.env.example` with placeholder values.
+
 Run:
 
 ```bash

@@ -9,6 +9,10 @@ function Login({ onLogin }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpStep, setIsOtpStep] = useState(false);
+  const [loginMessage, setLoginMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // =========================
   // REGISTER STATE
@@ -24,6 +28,20 @@ function Login({ onLogin }) {
 
   const [loading, setLoading] = useState(false);
 
+  const apiErrorMessage = (error) => {
+    if (error?.response?.data) {
+      if (typeof error.response.data === "string") {
+        return error.response.data;
+      }
+
+      if (error.response.data.message) {
+        return error.response.data.message;
+      }
+    }
+
+    return "Unable to reach the CampusKart backend. Please try again.";
+  };
+
   // =========================
   // LOGIN
   // =========================
@@ -32,44 +50,124 @@ function Login({ onLogin }) {
     e.preventDefault();
 
     if (!email || !password) {
-      alert("Please enter email and password.");
+      setErrorMessage("Please enter email and password.");
       return;
     }
 
     try {
       setLoading(true);
+      setErrorMessage("");
+      setLoginMessage("");
 
       const response = await axios.post(
         "http://localhost:8080/api/auth/login",
         {
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           password: password,
         }
       );
 
-      console.log("Logged in user:", response.data);
+      if (response.data?.requiresOtp) {
+        setIsOtpStep(true);
+        setOtp("");
+        setLoginMessage(
+          response.data.message ||
+            "OTP sent successfully. Please verify the code."
+        );
+        return;
+      }
+
+      setErrorMessage("Unexpected login response from the backend.");
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage(apiErrorMessage(error));
+      setIsOtpStep(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpVerify = async (e) => {
+    e.preventDefault();
+
+    if (!otp || otp.trim().length < 6) {
+      setErrorMessage("Please enter the 6-digit OTP.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setErrorMessage("");
+      setLoginMessage("");
+
+      const response = await axios.post(
+        "http://localhost:8080/api/otp/verify",
+        {
+          email: email.trim().toLowerCase(),
+          otp: otp.trim(),
+        }
+      );
+
+      if (!response.data?.token) {
+        throw new Error("OTP verification did not include a JWT.");
+      }
+
+      const user = {
+        token: response.data.token,
+        id: response.data.id,
+        fullName: response.data.fullName,
+        email: response.data.email,
+        role: response.data.role,
+      };
 
       localStorage.setItem(
         AUTH_STORAGE_KEY,
-        JSON.stringify(response.data)
+        JSON.stringify(user)
       );
 
-      onLogin(response.data);
-
+      onLogin(user);
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("OTP verification error:", error);
+      setErrorMessage(
+        apiErrorMessage(error).replace("Invalid or expired OTP", "Invalid or expired OTP. Please request a fresh code.")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (error.response) {
-        alert(
-          typeof error.response.data === "string"
-            ? error.response.data
-            : "Invalid email or password."
+  const handleResendOtp = async () => {
+    if (!email || !password) {
+      setErrorMessage("Please enter email and password first.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setErrorMessage("");
+      setOtp("");
+
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/login",
+        {
+          email: email.trim().toLowerCase(),
+          password: password,
+        }
+      );
+
+      if (response.data?.requiresOtp) {
+        setIsOtpStep(true);
+        setLoginMessage(
+          response.data.message ||
+            "A fresh OTP has been sent. Please verify the code."
         );
-      } else {
-        alert(
-          "Cannot connect to backend. Make sure Spring Boot is running."
-        );
+        return;
       }
+
+      setErrorMessage("Unable to resend OTP right now.");
+    } catch (error) {
+      console.error("Resend OTP error:", error);
+      setErrorMessage(apiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -499,73 +597,158 @@ function Login({ onLogin }) {
                 Login to continue to CampusKart
               </p>
 
-              <form onSubmit={handleLogin}>
+              {isOtpStep ? (
+                <form onSubmit={handleOtpVerify}>
+                  <div className="welcome-icon">
+                    CK
+                  </div>
 
-                {/* EMAIL */}
+                  <h2>
+                    Enter OTP
+                  </h2>
 
-                <div className="input-group">
+                  <p className="login-subtitle">
+                    Verification code sent to {email}
+                  </p>
 
-                  <label>
-                    Email Address
-                  </label>
+                  {loginMessage && (
+                    <div className="login-message">
+                      {loginMessage}
+                    </div>
+                  )}
 
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) =>
-                      setEmail(e.target.value)
-                    }
-                    required
-                  />
+                  {errorMessage && (
+                    <div className="login-error">
+                      {errorMessage}
+                    </div>
+                  )}
 
-                </div>
-
-                {/* PASSWORD */}
-
-                <div className="input-group">
-
-                  <div className="password-label">
-
+                  <div className="input-group">
                     <label>
-                      Password
+                      OTP Code
                     </label>
 
-                    <a href="#forgot">
-                      Forgot password?
-                    </a>
+                    <input
+                      type="text"
+                      placeholder="Enter 6-digit OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      inputMode="numeric"
+                      maxLength="6"
+                      autoComplete="one-time-code"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="login-button"
+                    disabled={loading}
+                  >
+                    {loading ? "Verifying..." : "Verify OTP"}
+                    {!loading && <span>→</span>}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="login-button"
+                    disabled={loading}
+                    onClick={handleResendOtp}
+                    style={{ marginTop: "10px" }}
+                  >
+                    {loading ? "Sending..." : "Resend OTP"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="login-button"
+                    disabled={loading}
+                    onClick={() => {
+                      setIsOtpStep(false);
+                      setOtp("");
+                      setLoginMessage("");
+                      setErrorMessage("");
+                    }}
+                    style={{ marginTop: "10px" }}
+                  >
+                    Back to login
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleLogin}>
+
+                  {/* EMAIL */}
+
+                  <div className="input-group">
+
+                    <label>
+                      Email Address
+                    </label>
+
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) =>
+                        setEmail(e.target.value)
+                      }
+                      required
+                    />
 
                   </div>
 
-                  <input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) =>
-                      setPassword(e.target.value)
-                    }
-                    required
-                  />
+                  {/* PASSWORD */}
 
-                </div>
+                  <div className="input-group">
 
-                {/* LOGIN BUTTON */}
+                    <div className="password-label">
 
-                <button
-                  type="submit"
-                  className="login-button"
-                  disabled={loading}
-                >
-                  {loading
-                    ? "Logging in..."
-                    : "Login to CampusKart"}
+                      <label>
+                        Password
+                      </label>
 
-                  {!loading && (
-                    <span>→</span>
+                      <a href="#forgot">
+                        Forgot password?
+                      </a>
+
+                    </div>
+
+                    <input
+                      type="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) =>
+                        setPassword(e.target.value)
+                      }
+                      required
+                    />
+
+                  </div>
+
+                  {errorMessage && (
+                    <div className="login-error">
+                      {errorMessage}
+                    </div>
                   )}
-                </button>
 
-              </form>
+                  {/* LOGIN BUTTON */}
+
+                  <button
+                    type="submit"
+                    className="login-button"
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "Logging in..."
+                      : "Login to CampusKart"}
+
+                    {!loading && (
+                      <span>→</span>
+                    )}
+                  </button>
+
+                </form>
+              )}
 
               <div className="divider">
                 <span>or</span>

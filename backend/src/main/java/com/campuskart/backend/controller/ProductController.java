@@ -172,6 +172,22 @@ public class ProductController {
         return "Product deleted successfully!";
     }
 
+    private void requireAdminOrSeller(Authentication authentication) {
+        if (authentication.getAuthorities().stream()
+                .anyMatch(authority ->
+                        "ROLE_ADMIN".equals(authority.getAuthority()))) {
+            return;
+        }
+
+        if (authentication.getAuthorities().stream()
+                .anyMatch(authority ->
+                        "ROLE_SELLER".equals(authority.getAuthority()))) {
+            return;
+        }
+
+        throw new AccessDeniedException("Only sellers or admins can upload product images");
+    }
+
     private void requireAdminOrProductOwner(
             Long productId,
             Authentication authentication) {

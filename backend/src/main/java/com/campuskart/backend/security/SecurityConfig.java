@@ -66,10 +66,17 @@ public class SecurityConfig {
             )
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/users"
+                ).permitAll()
+
                 .requestMatchers(
                     "/health",
                     "/api/auth/**",
+                    "/api/otp/verify",
+
                     "/api/products",
                     "/api/products/**",
                     "/api/categories",
@@ -79,6 +86,7 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/v3/api-docs"
                 ).permitAll()
+
                 .anyRequest().authenticated()
             )
 
@@ -98,19 +106,19 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(
                 Arrays.asList(
-                        "http://localhost:5173",
-                        "http://localhost:5174",
-                        "http://localhost:5175"
+                    "http://localhost:5173",
+                    "http://localhost:5174",
+                    "http://localhost:5175"
                 )
         );
 
         configuration.setAllowedMethods(
                 Arrays.asList(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE",
+                    "OPTIONS"
                 )
         );
 

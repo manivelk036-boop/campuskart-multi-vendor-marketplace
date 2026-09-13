@@ -299,6 +299,22 @@ function Orders({ currentUser }) {
 
                 <div className="product-info">
 
+                  <div className="product-image-preview">
+                    {product?.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product?.productName || `Product #${order.productId}`}
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span className="product-placeholder" aria-hidden="true">
+                        🛍️
+                      </span>
+                    )}
+                  </div>
+
                   <div className="product-main-info">
 
                     <p className="product-label">
