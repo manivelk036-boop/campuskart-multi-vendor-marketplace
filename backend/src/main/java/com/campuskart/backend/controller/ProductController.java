@@ -7,19 +7,33 @@ import com.campuskart.backend.repository.CategoryRepository;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
@@ -30,6 +44,15 @@ import java.util.Optional;
         "http://localhost:5175"
 })
 public class ProductController {
+
+    @Value("${campuskart.upload.dir:uploads/products}")
+    private String uploadDir;
+
+    @Value("${campuskart.upload.max-file-size:5242880}")
+    private long maxFileSize;
+
+    @Value("${campuskart.upload.allowed-types:image/jpeg,image/png,image/webp,image/gif}")
+    private String allowedTypes;
 
     @Autowired
     private ProductService productService;
@@ -182,6 +205,48 @@ public class ProductController {
     // DELETE PRODUCT
     // =========================
 
+    @Operation(summary = "Upload a product image file for an owner seller/admin product")
+    @ApiResponse(responseCode = "200", description = "Image uploaded and saved to the product")
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    public ResponseEntity<Product> uploadProductImage(
+            @PathVariable Long id,
+            @Parameter(description = "Product image file", required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(type = "string", format = "binary")))
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication) {
+
+        requireAdminOrProductOwner(id, authentication);
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Invalid or empty image file");
+        }
+
+        validateUploadedFile(file);
+
+        Product product = productService.getProductById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        try {
+            String originalFileName = file.getOriginalFilename();
+            String extension = getFileExtension(originalFileName);
+            String safeName = UUID.randomUUID() + (extension == null ? "" : extension);
+
+            Path uploadBase = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadBase);
+
+            Path target = uploadBase.resolve(safeName);
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+            String imageUrl = "/uploads/products/" + safeName;
+            Product saved = productService.updateImageUrl(id, imageUrl);
+            return ResponseEntity.ok(saved);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to store uploaded product image", ex);
+        }
+    }
+
     @Operation(summary = "Delete a product as an admin or owning seller")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
@@ -206,6 +271,39 @@ public class ProductController {
         } catch (NumberFormatException ex) {
             throw new RuntimeException("Invalid price value provided");
         }
+    }
+
+    private void validateUploadedFile(MultipartFile file) {
+        if (file.getSize() <= 0) {
+            throw new IllegalArgumentException("Invalid or empty image file");
+        }
+
+        if (file.getSize() > maxFileSize) {
+            throw new IllegalArgumentException("Image file exceeds the maximum allowed size");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !allowedTypes.contains(contentType)) {
+            throw new IllegalArgumentException("Only image files are allowed");
+        }
+
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || originalName.isBlank()) {
+            throw new IllegalArgumentException("Image file must have a valid filename");
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            return "";
+        }
+
+        int dotIdx = fileName.lastIndexOf('.');
+        if (dotIdx < 0) {
+            return "";
+        }
+
+        return fileName.substring(dotIdx);
     }
 
     private void requireAdminOrSeller(Authentication authentication) {

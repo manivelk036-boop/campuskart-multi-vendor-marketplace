@@ -30,5 +30,7 @@ public interface ProductService {
 
     Product updateProduct(Long id, Product updatedProduct);
 
+    Product updateImageUrl(Long id, String imageUrl);
+
     void deleteProduct(Long id);
 }

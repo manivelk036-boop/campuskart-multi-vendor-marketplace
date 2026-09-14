@@ -146,6 +146,15 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(existingProduct);
     }
 
+    @Override
+    public Product updateImageUrl(Long id, String imageUrl) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        product.setImageUrl(imageUrl);
+        return productRepository.save(product);
+    }
+
     private String resolveImageUrl(Product product) {
         String productText = product.getProductName() == null
                 ? ""
