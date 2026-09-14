@@ -35,6 +35,9 @@ function SellerDashboard({ currentUser, onLogout }) {
     imageUrl: "",
   });
 
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+
   // =========================
   // LOAD PRODUCTS
   // =========================
@@ -120,7 +123,66 @@ function SellerDashboard({ currentUser, onLogout }) {
       imageUrl: "",
     });
 
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    setSelectedImageFile(null);
+    setImagePreview("");
     setEditingProduct(null);
+  };
+
+  const uploadProductImage = async (productId, file) => {
+    if (!file) return null;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiClient.post(
+      `/products/${productId}/image`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  };
+
+  const handleImageFileChange = (event) => {
+    const file = event.target.files?.[0] ?? null;
+
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    if (!file) {
+      setSelectedImageFile(null);
+      setImagePreview("");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Only image files are allowed.");
+      event.target.value = "";
+      setSelectedImageFile(null);
+      setImagePreview("");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image file must be 5 MB or smaller.");
+      event.target.value = "";
+      setSelectedImageFile(null);
+      setImagePreview("");
+      return;
+    }
+
+    setSelectedImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setError("");
   };
 
   // =========================
@@ -161,7 +223,7 @@ function SellerDashboard({ currentUser, onLogout }) {
     try {
       setProductLoading(true);
 
-      await apiClient.post(
+      const response = await apiClient.post(
         `/products/seller/${sellerId}`,
         {
             productName: productForm.productName.trim(),
@@ -172,6 +234,11 @@ function SellerDashboard({ currentUser, onLogout }) {
             imageUrl: productForm.imageUrl?.trim() || "",
         }
       );
+
+      const createdProduct = response?.data;
+      if (selectedImageFile && createdProduct?.id) {
+        await uploadProductImage(createdProduct.id, selectedImageFile);
+      }
 
       setMessage("Product added successfully.");
       resetForm();
@@ -199,6 +266,9 @@ function SellerDashboard({ currentUser, onLogout }) {
       description: product.description || "",
       imageUrl: product.imageUrl || "",
     });
+
+    setSelectedImageFile(null);
+    setImagePreview("");
 
     window.scrollTo({
       top: 300,
@@ -232,6 +302,10 @@ function SellerDashboard({ currentUser, onLogout }) {
             imageUrl: productForm.imageUrl?.trim() || "",
         }
       );
+
+      if (selectedImageFile) {
+        await uploadProductImage(editingProduct.id, selectedImageFile);
+      }
 
       setMessage("Product updated successfully.");
       resetForm();
@@ -693,6 +767,28 @@ const lowStockProducts = products.filter(
               </div>
 
               <div className="form-group full-width">
+                <label>Product Image</label>
+
+                <div className="image-upload-row">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleImageFileChange}
+                  />
+
+                  <span className="file-name">
+                    {selectedImageFile ? selectedImageFile.name : "No file selected"}
+                  </span>
+                </div>
+
+                {imagePreview && (
+                  <div className="image-preview">
+                    <img src={imagePreview} alt="Selected product preview" />
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group full-width">
                 <label>Image URL</label>
 
                 <input
@@ -703,7 +799,7 @@ const lowStockProducts = products.filter(
                   placeholder="https://example.com/product.jpg"
                 />
 
-                {editingProduct?.imageUrl && !productForm.imageUrl && (
+                {editingProduct?.imageUrl && !productForm.imageUrl && !selectedImageFile && (
                   <div className="existing-image-preview">
                     <img src={editingProduct.imageUrl} alt="Existing product preview" />
                   </div>
