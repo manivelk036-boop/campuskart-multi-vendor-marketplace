@@ -1,9 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
 import apiClient from "../apiClient";
 import { resolveImageUrl } from "../utils/imageUrl";
-
-const API_BASE = "http://localhost:8080/api";
 
 const TRACKING_STEPS = [
   { status: "PENDING", label: "Placed", icon: "✓" },
@@ -37,7 +34,7 @@ function Orders({ currentUser, onReviewProduct }) {
 
       const [ordersResponse, productsResponse] = await Promise.all([
         apiClient.get(`/orders/user/${userId}`),
-        axios.get(`${API_BASE}/products`),
+        apiClient.get("/products"),
       ]);
 
       setOrders(

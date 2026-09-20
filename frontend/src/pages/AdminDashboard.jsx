@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import apiClient from "../apiClient";
 import "./AdminDashboard.css";
 
@@ -24,9 +23,7 @@ function AdminDashboard({ currentUser, onLogout }) {
 
   const loadProducts = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:8080/api/products"
-      );
+      const response = await apiClient.get("/products");
 
       setProducts(response.data);
     } catch (error) {
