@@ -6,6 +6,12 @@ import "./AdminDashboard.css";
 function AdminDashboard({ currentUser, onLogout }) {
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [editingCouponId, setEditingCouponId] = useState(null);
+  const [couponForm, setCouponForm] = useState({
+    code: "", discountType: "PERCENTAGE", discountValue: "",
+    minimumOrderAmount: "0", maximumDiscountAmount: "", startAt: "", expiresAt: "", usageLimit: "", active: true,
+  });
 
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -46,13 +52,22 @@ function AdminDashboard({ currentUser, onLogout }) {
     }
   };
 
+  const loadCoupons = async () => {
+    try {
+      const response = await apiClient.get("/coupons");
+      setCoupons(response.data);
+    } catch (error) {
+      console.error("Error loading coupons:", error);
+    }
+  };
+
   // =========================
   // INITIAL LOAD
   // =========================
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void Promise.all([loadProducts(), loadUsers()]);
+      void Promise.all([loadProducts(), loadUsers(), loadCoupons()]);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -80,6 +95,47 @@ function AdminDashboard({ currentUser, onLogout }) {
 
       alert("Failed to delete product.");
     }
+  };
+
+  const resetCouponForm = () => {
+    setEditingCouponId(null);
+    setCouponForm({ code: "", discountType: "PERCENTAGE", discountValue: "", minimumOrderAmount: "0", maximumDiscountAmount: "", startAt: "", expiresAt: "", usageLimit: "", active: true });
+  };
+
+  const saveCoupon = async (event) => {
+    event.preventDefault();
+    const payload = {
+      ...couponForm,
+      discountValue: Number(couponForm.discountValue),
+      minimumOrderAmount: Number(couponForm.minimumOrderAmount || 0),
+      maximumDiscountAmount: couponForm.maximumDiscountAmount ? Number(couponForm.maximumDiscountAmount) : null,
+      usageLimit: couponForm.usageLimit ? Number(couponForm.usageLimit) : null,
+    };
+    try {
+      if (editingCouponId) await apiClient.put(`/coupons/${editingCouponId}`, payload);
+      else await apiClient.post("/coupons", payload);
+      resetCouponForm();
+      await loadCoupons();
+    } catch (error) {
+      alert(error.response?.data?.message || error.response?.data || "Unable to save coupon.");
+    }
+  };
+
+  const editCoupon = (coupon) => {
+    setEditingCouponId(coupon.id);
+    setCouponForm({ ...coupon, discountValue: String(coupon.discountValue), minimumOrderAmount: String(coupon.minimumOrderAmount), maximumDiscountAmount: coupon.maximumDiscountAmount == null ? "" : String(coupon.maximumDiscountAmount), usageLimit: coupon.usageLimit == null ? "" : String(coupon.usageLimit), startAt: coupon.startAt?.slice(0, 16), expiresAt: coupon.expiresAt?.slice(0, 16) });
+    setActiveSection("coupons");
+  };
+
+  const toggleCoupon = async (coupon) => {
+    await apiClient.patch(`/coupons/${coupon.id}/active`, { active: !coupon.active });
+    await loadCoupons();
+  };
+
+  const deleteCoupon = async (id) => {
+    if (!window.confirm("Delete this coupon?")) return;
+    await apiClient.delete(`/coupons/${id}`);
+    await loadCoupons();
   };
 
   // =========================
@@ -130,6 +186,13 @@ function AdminDashboard({ currentUser, onLogout }) {
             onClick={() => setActiveSection("overview")}
           >
             📊 Overview
+          </button>
+
+          <button
+            className={activeSection === "coupons" ? "admin-nav active" : "admin-nav"}
+            onClick={() => setActiveSection("coupons")}
+          >
+            🏷️ Coupons
           </button>
 
           <button
@@ -412,6 +475,33 @@ function AdminDashboard({ currentUser, onLogout }) {
 
             </div>
 
+          </section>
+        )}
+
+        {activeSection === "coupons" && (
+          <section>
+            <div className="admin-section-title">
+              <div><h2>Coupon Management</h2><p>Create discounts and control their availability.</p></div>
+            </div>
+            <div className="admin-content-card">
+              <form className="coupon-admin-form" onSubmit={saveCoupon}>
+                <input placeholder="Code" value={couponForm.code} onChange={(event) => setCouponForm({ ...couponForm, code: event.target.value.toUpperCase() })} required />
+                <select value={couponForm.discountType} onChange={(event) => setCouponForm({ ...couponForm, discountType: event.target.value })}><option value="PERCENTAGE">Percentage</option><option value="FIXED">Fixed</option></select>
+                <input type="number" min="0.01" step="0.01" placeholder="Discount value" value={couponForm.discountValue} onChange={(event) => setCouponForm({ ...couponForm, discountValue: event.target.value })} required />
+                <input type="number" min="0" step="0.01" placeholder="Minimum order" value={couponForm.minimumOrderAmount} onChange={(event) => setCouponForm({ ...couponForm, minimumOrderAmount: event.target.value })} required />
+                <input type="number" min="0" step="0.01" placeholder="Maximum discount (optional)" value={couponForm.maximumDiscountAmount} onChange={(event) => setCouponForm({ ...couponForm, maximumDiscountAmount: event.target.value })} />
+                <input type="datetime-local" value={couponForm.startAt} onChange={(event) => setCouponForm({ ...couponForm, startAt: event.target.value })} required />
+                <input type="datetime-local" value={couponForm.expiresAt} onChange={(event) => setCouponForm({ ...couponForm, expiresAt: event.target.value })} required />
+                <input type="number" min="1" placeholder="Usage limit (optional)" value={couponForm.usageLimit} onChange={(event) => setCouponForm({ ...couponForm, usageLimit: event.target.value })} />
+                <button type="submit">{editingCouponId ? "Update Coupon" : "Create Coupon"}</button>
+                {editingCouponId && <button type="button" onClick={resetCouponForm}>Cancel</button>}
+              </form>
+              <div className="admin-table-wrapper">
+                <table className="admin-table"><thead><tr><th>Code</th><th>Discount</th><th>Usage</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+                  {coupons.map((coupon) => <tr key={coupon.id}><td><strong>{coupon.code}</strong></td><td>{coupon.discountType === "PERCENTAGE" ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}</td><td>{coupon.usedCount}{coupon.usageLimit ? ` / ${coupon.usageLimit}` : ""}</td><td>{new Date(coupon.expiresAt).toLocaleString()}</td><td>{coupon.active ? "Active" : "Inactive"}</td><td><button onClick={() => editCoupon(coupon)}>Edit</button> <button onClick={() => toggleCoupon(coupon)}>{coupon.active ? "Deactivate" : "Activate"}</button> <button onClick={() => deleteCoupon(coupon.id)}>Delete</button></td></tr>)}
+                </tbody></table>
+              </div>
+            </div>
           </section>
         )}
 

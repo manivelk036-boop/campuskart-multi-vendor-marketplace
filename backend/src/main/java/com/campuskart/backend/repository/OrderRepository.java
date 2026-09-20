@@ -22,4 +22,6 @@ public interface OrderRepository
 
     // Find orders by status
     List<Order> findByStatus(String status);
+
+    boolean existsByUserIdAndProductId(Long userId, Long productId);
 }

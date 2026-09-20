@@ -2,6 +2,7 @@ package com.campuskart.backend;
 
 import com.campuskart.backend.controller.AuthController;
 import com.campuskart.backend.entity.User;
+import com.campuskart.backend.otp.OtpController;
 import com.campuskart.backend.otp.OtpService;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.security.JwtService;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerOtpFlowTest {
@@ -38,6 +40,9 @@ class AuthControllerOtpFlowTest {
 
     @InjectMocks
     private AuthController authController;
+
+        @InjectMocks
+        private OtpController otpController;
 
     @Test
     void loginShouldValidateCredentialsAndSendOtpInsteadOfReturningJwt() {
@@ -65,5 +70,55 @@ class AuthControllerOtpFlowTest {
         assertFalse(body.containsKey("token"));
 
         verify(otpService).sendOtp("student@example.com");
+    }
+
+    @Test
+    void verifyOtpShouldSendLoginSuccessEmailAfterSuccessfulVerification() {
+        User user = new User();
+        user.setId(7L);
+        user.setEmail("student@example.com");
+        user.setRole("CUSTOMER");
+        user.setFullName("Demo Student");
+
+        when(otpService.verifyOtp("student@example.com", "123456"))
+                .thenReturn(true);
+        when(userRepository.findByEmail("student@example.com"))
+                .thenReturn(Optional.of(user));
+        when(jwtService.generateToken("student@example.com", "CUSTOMER"))
+                .thenReturn("jwt-token");
+
+        ResponseEntity<Map<String, Object>> response = otpController.verifyOtp(
+                Map.of("email", "student@example.com", "otp", "123456")
+        );
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("jwt-token", response.getBody().get("token"));
+        verify(otpService).sendLoginSuccessEmail("student@example.com", "Demo Student");
+    }
+
+    @Test
+    void verifyOtpShouldContinueWhenLoginSuccessEmailFails() {
+        User user = new User();
+        user.setEmail("student@example.com");
+        user.setRole("CUSTOMER");
+        user.setFullName("Demo Student");
+
+        when(otpService.verifyOtp("student@example.com", "123456"))
+                .thenReturn(true);
+        when(userRepository.findByEmail("student@example.com"))
+                .thenReturn(Optional.of(user));
+        when(jwtService.generateToken("student@example.com", "CUSTOMER"))
+                .thenReturn("jwt-token");
+        doThrow(new RuntimeException("mail unavailable"))
+                .when(otpService)
+                .sendLoginSuccessEmail("student@example.com", "Demo Student");
+
+        ResponseEntity<Map<String, Object>> response = otpController.verifyOtp(
+                Map.of("email", "student@example.com", "otp", "123456")
+        );
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("jwt-token", response.getBody().get("token"));
+        assertTrue((Boolean) response.getBody().get("verified"));
     }
 }

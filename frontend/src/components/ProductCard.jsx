@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { resolveImageUrl } from "../utils/imageUrl";
 
-function ProductCard({ product, onAddToCart, onViewDetails }) {
+function ProductCard({ product, onAddToCart, onViewDetails, isWishlisted, onToggleWishlist }) {
   const [imageFailed, setImageFailed] = useState(false);
   const isOutOfStock = Number(product.quantity) <= 0;
-  const imageUrl = product.imageUrl || product.image;
+  const imageUrl = resolveImageUrl(product.imageUrl || product.image);
   const sellerName = product.seller?.fullName || product.seller?.name || product.seller?.email || "CampusKart Seller";
 
   return (
@@ -19,17 +20,31 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
             className="product-image-content"
           />
         ) : (
-          <span className="product-placeholder" aria-hidden="true">
-            🛍️
+            <span className="product-placeholder" aria-hidden="true">
+            CK
           </span>
         )}
       </div>
 
       {/* PRODUCT DETAILS */}
       <div className="product-info">
-        <span className="category">
-          {product.category?.name || "General"}
-        </span>
+        <div className="product-card-topline">
+          <span className="category">
+            {product.category?.name || "General"}
+          </span>
+          <div className="product-card-actions">
+            <span className="rating-badge">★ {Number(product.averageRating || 0).toFixed(1)}</span>
+            <button
+              className={`wishlist-heart ${isWishlisted ? "is-wishlisted" : ""}`}
+              type="button"
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              aria-pressed={isWishlisted}
+              onClick={() => onToggleWishlist?.(product)}
+            >
+              {isWishlisted ? "♥" : "♡"}
+            </button>
+          </div>
+        </div>
 
         <h3 className="product-name">{product.productName}</h3>
 
@@ -45,7 +60,7 @@ function ProductCard({ product, onAddToCart, onViewDetails }) {
         <p className={`stock ${isOutOfStock ? "out-of-stock" : ""}`}>
           {isOutOfStock
             ? "Out of stock"
-            : `Stock available: ${product.quantity}`}
+            : `In stock · ${product.quantity} available`}
         </p>
 
         <div className="product-bottom">

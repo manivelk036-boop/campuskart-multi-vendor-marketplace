@@ -5,6 +5,8 @@ import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.security.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -14,6 +16,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/otp")
 public class OtpController {
+
+    private static final Logger logger = LoggerFactory.getLogger(OtpController.class);
 
     private final OtpService otpService;
     private final UserRepository userRepository;
@@ -86,10 +90,18 @@ public class OtpController {
 
         User user = userOptional.get();
 
+        String token = jwtService.generateToken(user.getEmail(), user.getRole());
+
+        try {
+            otpService.sendLoginSuccessEmail(user.getEmail(), user.getFullName());
+        } catch (RuntimeException ignored) {
+            logger.warn("Unable to send login success email to {}", user.getEmail());
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("verified", true);
         response.put("message", "OTP verified successfully");
-        response.put("token", jwtService.generateToken(user.getEmail(), user.getRole()));
+        response.put("token", token);
         response.put("id", user.getId());
         response.put("fullName", user.getFullName());
         response.put("email", user.getEmail());

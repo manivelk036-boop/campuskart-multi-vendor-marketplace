@@ -2,13 +2,19 @@ package com.campuskart.backend.service.impl;
 
 import com.campuskart.backend.entity.Order;
 import com.campuskart.backend.entity.Product;
+import com.campuskart.backend.dto.ApplyCouponRequest;
+import com.campuskart.backend.dto.CartItemRequest;
 import com.campuskart.backend.repository.OrderRepository;
 import com.campuskart.backend.repository.ProductRepository;
+import com.campuskart.backend.service.CouponService;
 import com.campuskart.backend.service.OrderService;
+import com.campuskart.backend.service.NotificationService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,11 +23,19 @@ import java.util.Optional;
 @Service
 public class OrderServiceImpl implements OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
+
     @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired(required = false)
+    private CouponService couponService;
 
 
     // =========================
@@ -31,6 +45,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public Order saveOrder(Order order) {
+
+        validateDeliveryAddress(order);
 
         Product product = order.getProductId() == null
                 ? null
@@ -52,9 +68,35 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Insufficient stock");
         }
 
-        order.setTotalPrice(
-                product.getPrice() * order.getQuantity()
-        );
+        double itemTotal = product.getPrice() * order.getQuantity();
+        order.setCouponDiscount(0.0);
+
+        if (order.getCouponCode() != null && !order.getCouponCode().isBlank()) {
+            if (couponService == null || order.getCheckoutItems() == null || order.getCheckoutItems().isEmpty()) {
+                throw new IllegalArgumentException("Complete cart details are required for coupon checkout");
+            }
+            ApplyCouponRequest couponRequest = new ApplyCouponRequest();
+            couponRequest.setCode(order.getCouponCode());
+            couponRequest.setItems(order.getCheckoutItems());
+            CouponService.CouponCalculation calculation = couponService.calculate(order.getCouponCode(), couponRequest);
+            CartItemRequest currentLine = order.getCheckoutItems().stream()
+                    .filter(line -> line.getProductId().equals(order.getProductId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Order item is missing from checkout cart"));
+            if (!currentLine.getQuantity().equals(order.getQuantity())) {
+                throw new IllegalArgumentException("Order quantity does not match checkout cart");
+            }
+            double lineShare = itemTotal / calculation.originalSubtotal();
+            double allocatedDiscount = Math.min(itemTotal, calculation.discountAmount() * lineShare);
+            order.setCouponDiscount(roundMoney(allocatedDiscount));
+            order.setTotalPrice(roundMoney(itemTotal - allocatedDiscount));
+            if (Boolean.TRUE.equals(order.getCouponUsageClaim())) {
+                couponService.claimUsage(order.getCouponCode());
+            }
+        } else {
+            order.setCouponCode(null);
+            order.setTotalPrice(itemTotal);
+        }
 
         if (order.getStatus() == null
                 || order.getStatus().isBlank()) {
@@ -159,6 +201,7 @@ public class OrderServiceImpl implements OrderService {
 
             Order currentOrder =
                     existingOrder.get();
+            String previousStatus = currentOrder.getStatus();
 
             currentOrder.setUserId(
                     order.getUserId()
@@ -180,7 +223,28 @@ public class OrderServiceImpl implements OrderService {
                     order.getStatus()
             );
 
-            return orderRepository.save(currentOrder);
+                if (!isBlank(order.getDeliveryAddress())) {
+                    currentOrder.setDeliveryAddress(order.getDeliveryAddress());
+                }
+                if (!isBlank(order.getDeliveryCity())) {
+                    currentOrder.setDeliveryCity(order.getDeliveryCity());
+                }
+                if (!isBlank(order.getDeliveryState())) {
+                    currentOrder.setDeliveryState(order.getDeliveryState());
+                }
+                if (!isBlank(order.getDeliveryPincode())) {
+                    currentOrder.setDeliveryPincode(order.getDeliveryPincode());
+                }
+                if (order.getDeliveryLatitude() != null) {
+                    currentOrder.setDeliveryLatitude(order.getDeliveryLatitude());
+                }
+                if (order.getDeliveryLongitude() != null) {
+                    currentOrder.setDeliveryLongitude(order.getDeliveryLongitude());
+                }
+
+            Order savedOrder = orderRepository.save(currentOrder);
+            notifyStatusChange(savedOrder, previousStatus, savedOrder.getStatus());
+            return savedOrder;
         }
 
         throw new RuntimeException(
@@ -202,9 +266,12 @@ public Order updateOrderStatus(Long id, String status) {
                     )
             );
 
+    String previousStatus = order.getStatus();
     order.setStatus(status);
 
-    return orderRepository.save(order);
+    Order savedOrder = orderRepository.save(order);
+    notifyStatusChange(savedOrder, previousStatus, savedOrder.getStatus());
+    return savedOrder;
 }
 
 
@@ -223,5 +290,43 @@ public Order updateOrderStatus(Long id, String status) {
         }
 
         orderRepository.deleteById(id);
+    }
+
+    private void validateDeliveryAddress(Order order) {
+        if (order == null
+                || isBlank(order.getDeliveryAddress())
+                || isBlank(order.getDeliveryCity())
+                || isBlank(order.getDeliveryState())
+                || isBlank(order.getDeliveryPincode())) {
+            throw new IllegalArgumentException(
+                    "Delivery address, city, state, and pincode are required"
+            );
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private double roundMoney(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+    private void notifyStatusChange(Order order, String previousStatus, String currentStatus) {
+        if (notificationService == null
+                || order == null
+                || order.getUserId() == null
+                || isBlank(currentStatus)
+                || currentStatus.equalsIgnoreCase(previousStatus)) {
+            return;
+        }
+
+        try {
+            notificationService.createForOrderStatus(
+                    order.getId(), order.getUserId(), currentStatus);
+        } catch (RuntimeException ex) {
+            logger.warn("Unable to create notification for order {} status {}",
+                    order.getId(), currentStatus, ex);
+        }
     }
 }

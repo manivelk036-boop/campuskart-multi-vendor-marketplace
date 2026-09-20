@@ -21,7 +21,7 @@ public class UploadStaticResourceConfig implements WebMvcConfigurer {
                 .toUri()
                 .toString();
 
-        registry.addResourceHandler("/uploads/**")
+        registry.addResourceHandler("/uploads/products/**")
                 .addResourceLocations(uploadLocation);
     }
 }

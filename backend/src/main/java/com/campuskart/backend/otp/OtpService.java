@@ -51,6 +51,25 @@ public class OtpService {
         mailSender.send(message);
     }
 
+    public void sendLoginSuccessEmail(String email, String userName) {
+        String normalizedEmail = normalizeEmail(email);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderEmail);
+        message.setTo(normalizedEmail);
+        message.setSubject("CampusKart Login Successful");
+        message.setText(
+                "Hi " + userName + ",\n\n" +
+                "Your CampusKart account was successfully logged in.\n\n" +
+                "Your login was completed successfully after OTP verification.\n\n" +
+                "If this wasn't you, please secure your account immediately.\n\n" +
+                "Thanks,\n" +
+                "CampusKart Team"
+        );
+
+        mailSender.send(message);
+    }
+
     public boolean verifyOtp(String email, String otp) {
         String normalizedEmail = normalizeEmail(email);
         String normalizedOtp = otp == null ? "" : otp.trim();
@@ -98,6 +117,7 @@ public class OtpService {
         private final long expiryTime;
 
         private OtpData(String otp, long expiryTime) {
+            
             this.otp = otp;
             this.expiryTime = expiryTime;
         }
