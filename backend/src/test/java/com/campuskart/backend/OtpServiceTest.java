@@ -2,8 +2,7 @@ package com.campuskart.backend;
 
 import com.campuskart.backend.otp.OtpService;
 import org.junit.jupiter.api.Test;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.campuskart.backend.otp.EmailClient;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -20,8 +19,8 @@ class OtpServiceTest {
 
     @Test
     void expiredOtpShouldBeRejected() throws Exception {
-        JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        OtpService otpService = new OtpService(mailSender);
+        EmailClient emailClient = org.mockito.Mockito.mock(EmailClient.class);
+        OtpService otpService = new OtpService(emailClient);
         setSenderEmail(otpService);
         setOtpData(otpService, "student@example.com", "123456", System.currentTimeMillis() - 1);
 
@@ -30,27 +29,28 @@ class OtpServiceTest {
 
     @Test
     void sendingOtpAgainShouldReplaceThePreviousCode() throws Exception {
-        JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
-        OtpService otpService = new OtpService(mailSender);
+        EmailClient emailClient = org.mockito.Mockito.mock(EmailClient.class);
+        doNothing().when(emailClient).send(any(), any(), any(), any());
+        OtpService otpService = new OtpService(emailClient);
         setSenderEmail(otpService);
 
         otpService.sendOtp("student@example.com");
-        SimpleMailMessage firstMessage = captureSentMessage(mailSender);
+        String firstMessage = captureSentText(emailClient);
         otpService.sendOtp("student@example.com");
-        SimpleMailMessage secondMessage = captureSentMessage(mailSender);
+        String secondMessage = captureSentText(emailClient);
 
-        String firstOtp = firstMessage.getText().replaceAll("(?s).*: (\\d{6})\\n\\n.*", "$1");
-        String secondOtp = secondMessage.getText().replaceAll("(?s).*: (\\d{6})\\n\\n.*", "$1");
+        String firstOtp = firstMessage.replaceAll("(?s).*: (\\d{6})\\n\\n.*", "$1");
+        String secondOtp = secondMessage.replaceAll("(?s).*: (\\d{6})\\n\\n.*", "$1");
 
         assertFalse(otpService.verifyOtp("student@example.com", firstOtp));
         assertTrue(otpService.verifyOtp("student@example.com", secondOtp));
     }
 
-    private SimpleMailMessage captureSentMessage(JavaMailSender mailSender) {
-        org.mockito.ArgumentCaptor<SimpleMailMessage> captor =
-                org.mockito.ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender, org.mockito.Mockito.atLeastOnce()).send(captor.capture());
+        private String captureSentText(EmailClient emailClient) {
+        org.mockito.ArgumentCaptor<String> captor =
+            org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(emailClient, org.mockito.Mockito.atLeastOnce())
+            .send(any(), any(), any(), captor.capture());
         return captor.getAllValues().get(captor.getAllValues().size() - 1);
     }
 

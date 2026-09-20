@@ -1,8 +1,6 @@
 package com.campuskart.backend.otp;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -13,17 +11,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OtpService {
 
-    private final JavaMailSender mailSender;
+    private final EmailClient emailClient;
 
-    @Value("${spring.mail.username}")
+    @Value("${resend.from}")
     private String senderEmail;
 
     private final SecureRandom random = new SecureRandom();
 
     private final Map<String, OtpData> otpStore = new ConcurrentHashMap<>();
 
-    public OtpService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    public OtpService(EmailClient emailClient) {
+        this.emailClient = emailClient;
     }
 
     public void sendOtp(String email) {
@@ -38,27 +36,23 @@ public class OtpService {
 
         otpStore.put(normalizedEmail, new OtpData(otp, expiryTime));
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderEmail);
-        message.setTo(normalizedEmail);
-        message.setSubject("CampusKart Login OTP");
-        message.setText(
+        emailClient.send(
+            senderEmail,
+            normalizedEmail,
+            "CampusKart Login OTP",
                 "Your CampusKart login OTP is: " + otp +
                 "\n\nThis OTP is valid for 5 minutes." +
                 "\n\nIf you did not request this OTP, please ignore this email."
         );
-
-        mailSender.send(message);
     }
 
     public void sendLoginSuccessEmail(String email, String userName) {
         String normalizedEmail = normalizeEmail(email);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderEmail);
-        message.setTo(normalizedEmail);
-        message.setSubject("CampusKart Login Successful");
-        message.setText(
+        emailClient.send(
+            senderEmail,
+            normalizedEmail,
+            "CampusKart Login Successful",
                 "Hi " + userName + ",\n\n" +
                 "Your CampusKart account was successfully logged in.\n\n" +
                 "Your login was completed successfully after OTP verification.\n\n" +
@@ -66,8 +60,6 @@ public class OtpService {
                 "Thanks,\n" +
                 "CampusKart Team"
         );
-
-        mailSender.send(message);
     }
 
     public boolean verifyOtp(String email, String otp) {
