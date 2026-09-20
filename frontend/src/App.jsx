@@ -5,6 +5,9 @@ import apiClient, { getStoredAuth, AUTH_STORAGE_KEY } from "./apiClient";
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
 import Cart from "./components/Cart";
+import ProductDetails from "./components/ProductDetails";
+import { resolveImageUrl } from "./utils/imageUrl";
+import Wishlist from "./pages/Wishlist";
 import Orders from "./pages/Orders";
 import Login from "./pages/Login";
 import SellerDashboard from "./pages/SellerDashboard";
@@ -39,6 +42,10 @@ function App() {
 
   const [showCart, setShowCart] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
+  const [showWishlist, setShowWishlist] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistError, setWishlistError] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -61,6 +68,7 @@ function App() {
     setCartItems([]);
     setShowCart(false);
     setShowOrders(false);
+    setShowWishlist(false);
   };
 
   // =========================================================
@@ -79,6 +87,8 @@ function App() {
 
     setShowCart(false);
     setShowOrders(false);
+    setShowWishlist(false);
+    setWishlistItems([]);
 
     setLoading(false);
   };
@@ -182,6 +192,25 @@ function App() {
     }
   }, [currentUser, isLoggedIn, keyword, maxPrice, minPrice, selectedCategory, sort]);
 
+  const loadWishlist = useCallback(async () => {
+    if (!isLoggedIn || currentUser?.role !== "CUSTOMER") {
+      setWishlistItems([]);
+      return;
+    }
+
+    try {
+      setWishlistLoading(true);
+      setWishlistError("");
+      const response = await apiClient.get("/wishlist");
+      setWishlistItems(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error loading wishlist:", error);
+      setWishlistError("Unable to load your wishlist.");
+    } finally {
+      setWishlistLoading(false);
+    }
+  }, [currentUser, isLoggedIn]);
+
   const loadSuggestions = useCallback(async (query) => {
     const trimmedQuery = query.trim();
 
@@ -227,10 +256,11 @@ function App() {
     const timer = setTimeout(() => {
       void loadCategories();
       void loadProducts();
+      void loadWishlist();
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [currentUser, isLoggedIn, loadCategories, loadProducts]);
+  }, [currentUser, isLoggedIn, loadCategories, loadProducts, loadWishlist]);
 
   useEffect(() => {
     if (!keyword.trim()) {
@@ -286,6 +316,57 @@ function App() {
 
   const openProductDetails = (product) => {
     setSelectedProduct(product);
+  };
+
+  const isWishlisted = (productId) => wishlistItems.some(
+    (item) => Number(item.productId) === Number(productId)
+  );
+
+  const toggleWishlist = async (product) => {
+    if (!currentUser || currentUser.role !== "CUSTOMER") {
+      alert("Please login as a customer to use your wishlist.");
+      return;
+    }
+
+    try {
+      if (isWishlisted(product.id)) {
+        await apiClient.delete(`/wishlist/${product.id}`);
+        setWishlistItems((items) => items.filter(
+          (item) => Number(item.productId) !== Number(product.id)
+        ));
+      } else {
+        const response = await apiClient.post(`/wishlist/${product.id}`);
+        setWishlistItems((items) => [response.data, ...items]);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to update your wishlist.");
+    }
+  };
+
+  const removeFromWishlist = async (productId) => {
+    try {
+      await apiClient.delete(`/wishlist/${productId}`);
+      setWishlistItems((items) => items.filter(
+        (item) => Number(item.productId) !== Number(productId)
+      ));
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to remove this product.");
+    }
+  };
+
+  const moveWishlistItemToCart = (item) => {
+    if (Number(item.quantity) <= 0) {
+      return;
+    }
+
+    addToCart({
+      id: item.productId,
+      productName: item.productName,
+      imageUrl: item.imageUrl,
+      price: item.price,
+      quantity: item.quantity,
+      seller: { fullName: item.sellerName },
+    });
   };
 
   // =========================================================
@@ -410,7 +491,7 @@ function App() {
   // PLACE ORDER
   // =========================================================
 
-  const placeOrder = async (paymentMethod) => {
+  const placeOrder = async (paymentMethod, deliveryAddress, coupon, couponItems) => {
     if (isPlacingOrder) {
       return;
     }
@@ -448,7 +529,7 @@ function App() {
       const createdOrders = [];
 
       // Create order for each cart item
-      for (const item of cartItems) {
+      for (const [index, item] of cartItems.entries()) {
         const orderData = {
           userId: currentUser.id,
           productId: item.id,
@@ -457,6 +538,15 @@ function App() {
             Number(item.price) *
             item.cartQuantity,
           status: "PENDING",
+          deliveryAddress: deliveryAddress.address.trim(),
+          deliveryCity: deliveryAddress.city.trim(),
+          deliveryState: deliveryAddress.state.trim(),
+          deliveryPincode: deliveryAddress.pincode.trim(),
+          deliveryLatitude: deliveryAddress.latitude,
+          deliveryLongitude: deliveryAddress.longitude,
+          couponCode: coupon?.couponCode || null,
+          couponUsageClaim: paymentMethod === "CASH_ON_DELIVERY" && Boolean(coupon?.couponCode) && index === cartItems.length - 1,
+          checkoutItems: couponItems || [],
         };
 
         console.log(
@@ -475,16 +565,17 @@ function App() {
 
         createdOrders.push({
           orderId: orderResponse.data.id,
-          amount: orderData.totalPrice,
+          amount: Number(orderResponse.data.totalPrice),
         });
       }
 
       if (paymentMethod !== "CASH_ON_DELIVERY") {
-        for (const order of createdOrders) {
+        for (const [index, order] of createdOrders.entries()) {
           await apiClient.post("/payments", {
             orderId: order.orderId,
             amount: order.amount,
             paymentMethod,
+            couponUsageClaim: Boolean(coupon?.couponCode) && index === createdOrders.length - 1,
           });
         }
       }
@@ -584,12 +675,27 @@ function App() {
 
       <Navbar
         cartCount={cartCount}
+        keyword={keyword}
+        onKeywordChange={(value) => {
+          setKeyword(value);
+          if (!value.trim()) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          } else {
+            setShowSuggestions(true);
+          }
+        }}
+        onSearchSubmit={handleSearchSubmit}
         onCartClick={() =>
           setShowCart(true)
         }
         onOrdersClick={() =>
           setShowOrders(true)
         }
+        onNotificationsOrderClick={() =>
+          setShowOrders(true)
+        }
+        onWishlistClick={() => setShowWishlist(true)}
         onLogout={handleLogout}
       />
 
@@ -789,7 +895,7 @@ function App() {
                       {suggestions.map((product) => (
                         <button key={product.id} className="suggestion-item" type="button" onClick={() => onSuggestionClick(product)}>
                           <span className="suggestion-thumb">
-                            {product.imageUrl ? <img src={product.imageUrl} alt="" /> : <span aria-hidden="true">🛍️</span>}
+                            {product.imageUrl ? <img src={resolveImageUrl(product.imageUrl)} alt="" /> : <span aria-hidden="true">🛍️</span>}
                           </span>
                           <span className="suggestion-name">{product.productName}</span>
                         </button>
@@ -861,6 +967,8 @@ function App() {
                     product={product}
                     onAddToCart={addToCart}
                     onViewDetails={openProductDetails}
+                    isWishlisted={isWishlisted(product.id)}
+                    onToggleWishlist={toggleWishlist}
                   />
                 ))}
               </div>
@@ -936,6 +1044,7 @@ function App() {
 
             <Orders
                 currentUser={currentUser}
+              onReviewProduct={openProductDetails}
             />
 
           </div>
@@ -943,27 +1052,27 @@ function App() {
         </div>
       )}
 
+      {showWishlist && (
+        <Wishlist
+          items={wishlistItems}
+          loading={wishlistLoading}
+          error={wishlistError}
+          onClose={() => setShowWishlist(false)}
+          onRemove={removeFromWishlist}
+          onMoveToCart={moveWishlistItemToCart}
+        />
+      )}
+
       {selectedProduct && (
-        <div className="product-detail-overlay">
-          <div className="product-detail-modal">
-            <button className="close-btn detail-close" onClick={() => setSelectedProduct(null)}>✕</button>
-            <div className="detail-visual">
-              {selectedProduct.imageUrl ? <img src={selectedProduct.imageUrl} alt={selectedProduct.productName} /> : <span className="product-placeholder" aria-hidden="true">🛍️</span>}
-            </div>
-            <div className="detail-content">
-              <span className="category">{selectedProduct.category?.name || "General"}</span>
-              <h3>{selectedProduct.productName}</h3>
-              <p className="description">{selectedProduct.description || "No description available."}</p>
-              <div className="detail-meta">
-                <span className="detail-price">₹{Number(selectedProduct.price).toLocaleString("en-IN")}</span>
-                <span className="detail-stock">{Number(selectedProduct.quantity) > 0 ? `Stock: ${selectedProduct.quantity}` : "Out of Stock"}</span>
-              </div>
-              <div className="detail-actions">
-                <button className="add-btn" disabled={Number(selectedProduct.quantity) <= 0} onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}>Add to Cart</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProductDetails
+          key={selectedProduct.id}
+          product={selectedProduct}
+          currentUser={currentUser}
+          isWishlisted={isWishlisted(selectedProduct.id)}
+          onToggleWishlist={toggleWishlist}
+          onAddToCart={(product) => { addToCart(product); setSelectedProduct(null); }}
+          onClose={() => setSelectedProduct(null)}
+        />
       )}
 
     </div>

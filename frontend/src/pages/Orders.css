@@ -126,6 +126,22 @@
   font-size: 16px;
 }
 
+.order-delivery-address {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eeeeee;
+  color: #374151;
+  font-size: 13px;
+}
+
+.order-delivery-address strong {
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
 /* =========================
    TRACKING
 ========================= */
@@ -245,4 +261,17 @@
   .tracking-steps span {
     width: auto;
   }
+}
+
+.order-review-button {
+  align-self: flex-start;
+  margin-top: 10px;
+  padding: 7px 10px;
+  border: 1px solid #d8d9f4;
+  border-radius: 7px;
+  background: #f4f4ff;
+  color: #4b4bc5;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
 }

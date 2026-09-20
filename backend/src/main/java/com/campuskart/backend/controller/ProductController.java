@@ -6,6 +6,8 @@ import com.campuskart.backend.entity.User;
 import com.campuskart.backend.repository.CategoryRepository;
 import com.campuskart.backend.repository.UserRepository;
 import com.campuskart.backend.service.ProductService;
+import com.campuskart.backend.entity.ProductImage;
+import com.campuskart.backend.service.ProductImageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,6 +36,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
@@ -56,6 +59,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductImageService productImageService;
 
     @Autowired
     private UserRepository userRepository;
@@ -135,6 +141,12 @@ public class ProductController {
             @PathVariable Long id) {
 
         return productService.getProductById(id);
+    }
+
+    @Operation(summary = "List ordered gallery images for a product")
+    @GetMapping("/{id}/images")
+    public List<ProductImage> getProductImages(@PathVariable Long id) {
+        return productImageService.getImages(id);
     }
 
     // =========================
@@ -245,6 +257,64 @@ public class ProductController {
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to store uploaded product image", ex);
         }
+    }
+
+    @Operation(summary = "Add an image to a product gallery")
+    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    public ResponseEntity<ProductImage> addProductGalleryImage(
+            @PathVariable Long id,
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication) {
+
+        requireAdminOrProductOwner(id, authentication);
+        if (file == null || file.isEmpty()) throw new IllegalArgumentException("Invalid or empty image file");
+        validateUploadedFile(file);
+        try {
+            String extension = getFileExtension(file.getOriginalFilename());
+            String safeName = UUID.randomUUID() + (extension == null ? "" : extension);
+            Path uploadBase = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadBase);
+            Files.copy(file.getInputStream(), uploadBase.resolve(safeName), StandardCopyOption.REPLACE_EXISTING);
+            return ResponseEntity.ok(productImageService.addImage(id, "/uploads/products/" + safeName));
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to store product gallery image", ex);
+        }
+    }
+
+    @Operation(summary = "Add an image URL to a product gallery")
+    @PostMapping(value = "/{id}/images/url", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    public ResponseEntity<ProductImage> addProductGalleryImageUrl(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        requireAdminOrProductOwner(id, authentication);
+        return ResponseEntity.ok(productImageService.addImage(id, body.get("imageUrl")));
+    }
+
+    @Operation(summary = "Delete a product gallery image")
+    @DeleteMapping("/{id}/images/{imageId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    public ResponseEntity<Void> deleteProductGalleryImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            Authentication authentication) {
+        requireAdminOrProductOwner(id, authentication);
+        productImageService.deleteImage(id, imageId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Change product gallery image order")
+    @PatchMapping("/{id}/images/{imageId}/order")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    public ResponseEntity<ProductImage> reorderProductGalleryImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            @RequestBody Map<String, Integer> body,
+            Authentication authentication) {
+        requireAdminOrProductOwner(id, authentication);
+        return ResponseEntity.ok(productImageService.reorderImage(id, imageId, body.getOrDefault("displayOrder", 0)));
     }
 
     @Operation(summary = "Delete a product as an admin or owning seller")

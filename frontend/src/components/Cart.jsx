@@ -1,4 +1,6 @@
 import { useState } from "react";
+import apiClient from "../apiClient";
+import { resolveImageUrl } from "../utils/imageUrl";
 
 function Cart({
   cartItems,
@@ -11,6 +13,20 @@ function Cart({
 }) {
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("UPI");
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    latitude: null,
+    longitude: null,
+  });
+  const [locationError, setLocationError] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const subtotal = cartItems.reduce(
     (total, item) =>
@@ -21,6 +37,12 @@ function Cart({
   const deliveryFee = cartItems.length > 0 ? 0 : 0;
 
   const grandTotal = subtotal + deliveryFee;
+  const discountAmount = Number(appliedCoupon?.discountAmount || 0);
+  const checkoutTotal = Math.max(0, grandTotal - discountAmount);
+  const couponItems = cartItems.map((item) => ({
+    productId: item.id,
+    quantity: Number(item.cartQuantity),
+  }));
 
   const formatMoney = (amount) => {
     return `₹${Number(amount || 0).toLocaleString("en-IN")}`;
@@ -36,7 +58,90 @@ function Cart({
   };
 
   const handleConfirmOrder = () => {
-    onPlaceOrder(paymentMethod);
+    if (Object.values(deliveryAddress).slice(0, 4).some((value) => !value.trim())) {
+      setLocationError("Please complete your delivery address before placing the order.");
+      return;
+    }
+
+    setLocationError("");
+    onPlaceOrder(paymentMethod, deliveryAddress, appliedCoupon, couponItems);
+  };
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+    setIsApplyingCoupon(true);
+    setCouponError("");
+    try {
+      const response = await apiClient.post("/coupons/apply", {
+        code: couponCode,
+        items: couponItems,
+      });
+      setAppliedCoupon(response.data);
+      setCouponCode(response.data.couponCode);
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponError(error.response?.data?.message || error.response?.data || "This coupon cannot be applied.");
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const removeCoupon = async () => {
+    try {
+      await apiClient.post("/coupons/remove");
+    } catch {
+      // Coupon state is checkout-local; the remove endpoint is intentionally idempotent.
+    }
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
+  const updateAddress = (field, value) => {
+    setDeliveryAddress((current) => ({ ...current, [field]: value }));
+    setLocationError("");
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Location is unavailable in this browser. You can enter your address manually.");
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationError("");
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const response = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=en`
+        );
+        if (!response.ok) throw new Error("Reverse geocoding failed");
+        const data = await response.json();
+        const address = [data.localityInfo?.administrative?.[3]?.name, data.locality, data.principalSubdivision]
+          .filter(Boolean)
+          .join(", ");
+
+        setDeliveryAddress((current) => ({
+          ...current,
+          address: address || data.city || data.locality || "",
+          city: data.city || data.locality || current.city,
+          state: data.principalSubdivision || current.state,
+          pincode: data.postcode || current.pincode,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        }));
+      } catch {
+        setLocationError("We found your location but could not read its address. Please enter the address manually.");
+      } finally {
+        setIsLocating(false);
+      }
+    }, () => {
+      setIsLocating(false);
+      setLocationError("We could not access your location. Please allow access or enter your address manually.");
+    }, { enableHighAccuracy: true, timeout: 10000 });
   };
 
   return (
@@ -99,7 +204,7 @@ function Cart({
                   <div className="cart-item-image">
                     {item.imageUrl ? (
                       <img
-                        src={item.imageUrl}
+                        src={resolveImageUrl(item.imageUrl)}
                         alt={item.productName}
                       />
                     ) : (
@@ -256,7 +361,7 @@ function Cart({
                     <div className="checkout-item-image">
                       {item.imageUrl ? (
                         <img
-                          src={item.imageUrl}
+                          src={resolveImageUrl(item.imageUrl)}
                           alt={item.productName}
                         />
                       ) : (
@@ -312,6 +417,43 @@ function Cart({
                 📍 Campus Delivery
               </span>
 
+            </div>
+
+            <div className="coupon-section">
+              <div className="payment-method-heading">
+                <h4>Coupon or discount</h4>
+                <span>Apply a valid offer to this cart</span>
+              </div>
+              {appliedCoupon ? (
+                <div className="applied-coupon">
+                  <strong>{appliedCoupon.couponCode}</strong>
+                  <span>− {formatMoney(appliedCoupon.discountAmount)}</span>
+                  <button type="button" onClick={removeCoupon} disabled={isProcessing}>Remove</button>
+                </div>
+              ) : (
+                <div className="coupon-input-row">
+                  <input value={couponCode} onChange={(event) => setCouponCode(event.target.value.toUpperCase())} placeholder="Enter coupon code" disabled={isProcessing || isApplyingCoupon} />
+                  <button type="button" onClick={applyCoupon} disabled={isProcessing || isApplyingCoupon}>{isApplyingCoupon ? "Checking..." : "Apply"}</button>
+                </div>
+              )}
+              {couponError && <p className="location-error">{couponError}</p>}
+            </div>
+
+            <div className="delivery-address-section">
+              <div className="payment-method-heading">
+                <h4>Delivery Address</h4>
+                <span>Where should we deliver this order?</span>
+              </div>
+              <button type="button" className="location-button" onClick={useCurrentLocation} disabled={isLocating || isProcessing}>
+                {isLocating ? "Detecting location..." : "Use My Current Location"}
+              </button>
+              {locationError && <p className="location-error">{locationError}</p>}
+              <div className="delivery-address-fields">
+                <label className="full-width">Full address<textarea value={deliveryAddress.address} onChange={(event) => updateAddress("address", event.target.value)} placeholder="House, hostel, or street address" rows="2" required /></label>
+                <label>City<input value={deliveryAddress.city} onChange={(event) => updateAddress("city", event.target.value)} required /></label>
+                <label>State<input value={deliveryAddress.state} onChange={(event) => updateAddress("state", event.target.value)} required /></label>
+                <label>Pincode<input value={deliveryAddress.pincode} onChange={(event) => updateAddress("pincode", event.target.value)} inputMode="numeric" pattern="[0-9]{4,10}" required /></label>
+              </div>
             </div>
 
             {/* PAYMENT METHOD */}
@@ -383,13 +525,18 @@ function Cart({
                 </strong>
               </div>
 
+              {discountAmount > 0 && <div>
+                <span>Coupon discount</span>
+                <strong>− {formatMoney(discountAmount)}</strong>
+              </div>}
+
               <div className="checkout-grand-total">
                 <span>
                   Grand Total
                 </span>
 
                 <strong>
-                  {formatMoney(grandTotal)}
+                  {formatMoney(checkoutTotal)}
                 </strong>
               </div>
 

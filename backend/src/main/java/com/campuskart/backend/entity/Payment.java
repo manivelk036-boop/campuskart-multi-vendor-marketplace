@@ -25,6 +25,9 @@ public class Payment {
     @Column(unique = true)
     private String transactionId;
 
+    @Transient
+    private Boolean couponUsageClaim;
+
     public Payment() {
     }
 
@@ -86,4 +89,7 @@ public class Payment {
     public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
     }
+
+    public Boolean getCouponUsageClaim() { return couponUsageClaim; }
+    public void setCouponUsageClaim(Boolean couponUsageClaim) { this.couponUsageClaim = couponUsageClaim; }
 }

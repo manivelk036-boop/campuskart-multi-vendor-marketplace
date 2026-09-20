@@ -1,5 +1,4 @@
-﻿import { useState } from "react";
-import axios from "axios";
+﻿import { useEffect, useState } from "react";
 import apiClient, { AUTH_STORAGE_KEY } from "../apiClient";
 
 function Login({ onLogin }) {
@@ -13,6 +12,7 @@ function Login({ onLogin }) {
   const [isOtpStep, setIsOtpStep] = useState(false);
   const [loginMessage, setLoginMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [otpSecondsRemaining, setOtpSecondsRemaining] = useState(0);
 
   // =========================
   // REGISTER STATE
@@ -59,8 +59,8 @@ function Login({ onLogin }) {
       setErrorMessage("");
       setLoginMessage("");
 
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
+      const response = await apiClient.post(
+        "/auth/login",
         {
           email: email.trim().toLowerCase(),
           password: password,
@@ -70,6 +70,7 @@ function Login({ onLogin }) {
       if (response.data?.requiresOtp) {
         setIsOtpStep(true);
         setOtp("");
+        setOtpSecondsRemaining(5 * 60);
         setLoginMessage(
           response.data.message ||
             "OTP sent successfully. Please verify the code."
@@ -90,6 +91,11 @@ function Login({ onLogin }) {
   const handleOtpVerify = async (e) => {
     e.preventDefault();
 
+    if (otpSecondsRemaining <= 0) {
+      setErrorMessage("OTP expired. Please request a fresh code.");
+      return;
+    }
+
     if (!otp || otp.trim().length < 6) {
       setErrorMessage("Please enter the 6-digit OTP.");
       return;
@@ -100,8 +106,8 @@ function Login({ onLogin }) {
       setErrorMessage("");
       setLoginMessage("");
 
-      const response = await axios.post(
-        "http://localhost:8080/api/otp/verify",
+      const response = await apiClient.post(
+        "/otp/verify",
         {
           email: email.trim().toLowerCase(),
           otp: otp.trim(),
@@ -147,8 +153,8 @@ function Login({ onLogin }) {
       setErrorMessage("");
       setOtp("");
 
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
+      const response = await apiClient.post(
+        "/auth/login",
         {
           email: email.trim().toLowerCase(),
           password: password,
@@ -157,6 +163,7 @@ function Login({ onLogin }) {
 
       if (response.data?.requiresOtp) {
         setIsOtpStep(true);
+        setOtpSecondsRemaining(5 * 60);
         setLoginMessage(
           response.data.message ||
             "A fresh OTP has been sent. Please verify the code."
@@ -172,6 +179,18 @@ function Login({ onLogin }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isOtpStep || otpSecondsRemaining <= 0) return undefined;
+
+    const timer = window.setInterval(() => {
+      setOtpSecondsRemaining((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [isOtpStep, otpSecondsRemaining]);
+
+  const formattedOtpTime = `${String(Math.floor(otpSecondsRemaining / 60)).padStart(2, "0")}:${String(otpSecondsRemaining % 60).padStart(2, "0")}`;
 
   // =========================
   // CREATE ACCOUNT
@@ -317,6 +336,12 @@ function Login({ onLogin }) {
           </span>
         </div>
 
+        <div className="login-hero-nav" aria-label="CampusKart marketplace links">
+          <span>SHOP</span>
+          <span>SELL</span>
+          <span>CONNECT</span>
+        </div>
+
         <div className="login-hero">
 
           <p className="login-tag">
@@ -324,34 +349,66 @@ function Login({ onLogin }) {
           </p>
 
           <h1>
-            Everything you need,
+            Everything
+            <br />
+            you need,
             <br />
             <span>right on campus.</span>
           </h1>
 
           <p>
-            Buy from campus sellers, discover great
-            products, and get everything you need
-            without leaving campus.
+            Buy from verified campus sellers, discover great products, and get
+            everything you need without leaving campus.
           </p>
 
           <div className="features">
 
             <div className="feature">
-              <div>01</div>
+              <div className="feature-icon" aria-hidden="true">🛒</div>
               <span>Easy Shopping</span>
             </div>
 
             <div className="feature">
-              <div>02</div>
+              <div className="feature-icon" aria-hidden="true">⚡</div>
               <span>Quick Orders</span>
             </div>
 
             <div className="feature">
-              <div>03</div>
+              <div className="feature-icon" aria-hidden="true">👥</div>
               <span>Campus Sellers</span>
             </div>
 
+          </div>
+
+          <p className="login-community-note">Students support students.</p>
+
+          <div className="floating-products" aria-hidden="true">
+            <div className="floating-product floating-product-headphones">
+              <div className="floating-product-art headphones-art">◖◗</div>
+              <div className="floating-product-copy">
+                <strong>Headphones</strong>
+                <span>₹1,299</span>
+              </div>
+              <span className="floating-product-action">♡</span>
+            </div>
+
+            <div className="floating-product floating-product-hoodie">
+              <div className="floating-product-art hoodie-art">◆</div>
+              <div className="floating-product-copy">
+                <strong>Campus Hoodie</strong>
+                <span>₹799</span>
+              </div>
+              <span className="floating-product-action">♡</span>
+            </div>
+
+            <div className="floating-product floating-product-study">
+              <div className="floating-product-art study-art">✦</div>
+              <div className="floating-product-copy">
+                <strong>Study Essentials</strong>
+                <span>₹499</span>
+              </div>
+              <span className="floating-product-action">＋</span>
+            </div>
           </div>
 
         </div>
@@ -364,7 +421,21 @@ function Login({ onLogin }) {
 
       <div className="login-right">
 
+        <p className="login-right-eyebrow">A SMARTER CAMPUS. TOGETHER.</p>
+
+        <div className="login-card-decorations" aria-hidden="true">
+          <span className="login-decoration login-decoration-cart">🛒</span>
+          <span className="login-decoration login-decoration-heart">♡</span>
+          <span className="login-decoration login-decoration-cap">✦</span>
+          <span className="login-decoration login-decoration-community">Campus Community</span>
+        </div>
+
         <div className="login-card">
+
+          <div className="login-card-brand">
+            <span className="login-card-brand-mark">CK</span>
+            <strong>Campus<span>Kart</span></strong>
+          </div>
 
           {/* =========================
               REGISTER PAGE
@@ -393,6 +464,7 @@ function Login({ onLogin }) {
               {/* ROLE DISPLAY */}
 
               <div
+                className="login-role-toggle"
                 style={{
                   display: "flex",
                   gap: "10px",
@@ -401,6 +473,7 @@ function Login({ onLogin }) {
               >
 
                 <button
+                  className="login-role-button"
                   type="button"
                   onClick={() =>
                     setSelectedRole("CUSTOMER")
@@ -429,6 +502,7 @@ function Login({ onLogin }) {
                 </button>
 
                 <button
+                  className="login-role-button"
                   type="button"
                   onClick={() =>
                     setSelectedRole("SELLER")
@@ -559,6 +633,7 @@ function Login({ onLogin }) {
                 Already have an account?
 
                 <button
+                  className="login-link-button"
                   type="button"
                   onClick={backToLogin}
                   style={{
@@ -623,6 +698,10 @@ function Login({ onLogin }) {
                     </div>
                   )}
 
+                  <p className={`otp-countdown ${otpSecondsRemaining === 0 ? "expired" : ""}`}>
+                    {otpSecondsRemaining === 0 ? "OTP expired" : `OTP expires in ${formattedOtpTime}`}
+                  </p>
+
                   <div className="input-group">
                     <label>
                       OTP Code
@@ -643,7 +722,7 @@ function Login({ onLogin }) {
                   <button
                     type="submit"
                     className="login-button"
-                    disabled={loading}
+                    disabled={loading || otpSecondsRemaining === 0}
                   >
                     {loading ? "Verifying..." : "Verify OTP"}
                     {!loading && <span>→</span>}
@@ -651,7 +730,7 @@ function Login({ onLogin }) {
 
                   <button
                     type="button"
-                    className="login-button"
+                    className="login-button login-secondary-button"
                     disabled={loading}
                     onClick={handleResendOtp}
                     style={{ marginTop: "10px" }}
@@ -661,7 +740,7 @@ function Login({ onLogin }) {
 
                   <button
                     type="button"
-                    className="login-button"
+                    className="login-button login-secondary-button"
                     disabled={loading}
                     onClick={() => {
                       setIsOtpStep(false);
@@ -679,7 +758,7 @@ function Login({ onLogin }) {
 
                   {/* EMAIL */}
 
-                  <div className="input-group">
+                  <div className="input-group login-email-group">
 
                     <label>
                       Email Address
@@ -699,7 +778,7 @@ function Login({ onLogin }) {
 
                   {/* PASSWORD */}
 
-                  <div className="input-group">
+                  <div className="input-group login-password-group">
 
                     <div className="password-label">
 

@@ -5,8 +5,10 @@ import com.campuskart.backend.entity.Order;
 import com.campuskart.backend.repository.OrderRepository;
 import com.campuskart.backend.repository.PaymentRepository;
 import com.campuskart.backend.service.PaymentService;
+import com.campuskart.backend.service.CouponService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +23,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired(required = false)
+    private CouponService couponService;
+
     @Override
+    @Transactional
     public Payment createPayment(
             Payment payment,
             Long authenticatedUserId) {
@@ -57,7 +63,13 @@ public class PaymentServiceImpl implements PaymentService {
                 "TXN-" + UUID.randomUUID()
         );
 
-        return paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+        if (Boolean.TRUE.equals(payment.getCouponUsageClaim())
+                && order.getCouponCode() != null
+                && couponService != null) {
+            couponService.claimUsage(order.getCouponCode());
+        }
+        return savedPayment;
     }
 
     @Override

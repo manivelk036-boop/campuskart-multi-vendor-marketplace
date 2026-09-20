@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import apiClient from "../apiClient";
+import { resolveImageUrl } from "../utils/imageUrl";
 
 const API_BASE = "http://localhost:8080/api";
 
@@ -12,7 +13,7 @@ const TRACKING_STEPS = [
   { status: "DELIVERED", label: "Delivered", icon: "✓" },
 ];
 
-function Orders({ currentUser }) {
+function Orders({ currentUser, onReviewProduct }) {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -292,6 +293,13 @@ function Orders({ currentUser }) {
 
                 </div>
 
+                {order.deliveryAddress && (
+                  <div className="order-delivery-address">
+                    <strong>Delivery Address</strong>
+                    <span>{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState} - {order.deliveryPincode}</span>
+                  </div>
+                )}
+
 
                 {/* =================================
                     PRODUCT INFORMATION
@@ -302,7 +310,7 @@ function Orders({ currentUser }) {
                   <div className="product-image-preview">
                     {product?.imageUrl ? (
                       <img
-                        src={product.imageUrl}
+                        src={resolveImageUrl(product.imageUrl)}
                         alt={product?.productName || `Product #${order.productId}`}
                         onError={(event) => {
                           event.currentTarget.style.display = "none";
@@ -343,6 +351,16 @@ function Orders({ currentUser }) {
                         Product details are no longer
                         available.
                       </p>
+                    )}
+
+                    {product && (
+                      <button
+                        className="order-review-button"
+                        type="button"
+                        onClick={() => onReviewProduct?.(product)}
+                      >
+                        ★ Review Product
+                      </button>
                     )}
 
                   </div>

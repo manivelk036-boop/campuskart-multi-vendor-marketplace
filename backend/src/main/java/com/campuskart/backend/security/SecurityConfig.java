@@ -79,6 +79,7 @@ public class SecurityConfig {
 
                     "/api/products",
                     "/api/products/**",
+                    "/api/reviews/product/**",
                     "/api/categories",
                     "/api/categories/**",
                     "/uploads/**",
@@ -117,6 +118,7 @@ public class SecurityConfig {
                 Arrays.asList(
                     "GET",
                     "POST",
+                    "PATCH",
                     "PUT",
                     "DELETE",
                     "OPTIONS"
