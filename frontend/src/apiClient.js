@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 export const AUTH_STORAGE_KEY = "campuskart.auth";
 
 export const getStoredAuth = () => {
