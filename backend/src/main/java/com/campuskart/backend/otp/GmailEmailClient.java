@@ -6,12 +6,15 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -19,6 +22,8 @@ import java.util.Base64;
 
 @Component
 public class GmailEmailClient implements EmailClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(GmailEmailClient.class);
 
     private final Gmail gmail;
 
@@ -51,6 +56,11 @@ public class GmailEmailClient implements EmailClient {
         try {
             gmail.users().messages().send("me", message).execute();
         } catch (Exception exception) {
+            Integer statusCode = exception instanceof HttpResponseException httpException
+                    ? httpException.getStatusCode()
+                    : null;
+            logger.error("Gmail API send failed: exceptionClass={}, statusCode={}, message={}",
+                    exception.getClass().getName(), statusCode, exception.getMessage());
             throw new IllegalStateException("Failed to send email through Gmail API", exception);
         }
     }
