@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import apiClient, { getStoredAuth, AUTH_STORAGE_KEY } from "./apiClient";
+import apiClient, { API_BASE_URL, getStoredAuth, AUTH_STORAGE_KEY } from "./apiClient";
 
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
@@ -15,7 +15,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 
 import "./App.css";
 
-const API_BASE_URL = "http://localhost:8080/api";
 const DEFAULT_SORT = "relevance";
 
 function App() {
