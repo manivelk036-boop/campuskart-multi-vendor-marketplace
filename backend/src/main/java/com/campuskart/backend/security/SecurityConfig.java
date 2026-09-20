@@ -73,7 +73,11 @@ public class SecurityConfig {
                 ).permitAll()
 
                 .requestMatchers(
-                    "/health",
+                    HttpMethod.GET,
+                    "/health"
+                ).permitAll()
+
+                .requestMatchers(
                     "/api/auth/**",
                     "/api/otp/verify",
 
