@@ -13,7 +13,7 @@ public class OtpService {
 
     private final EmailClient emailClient;
 
-    @Value("${gmail.from.email}")
+    @Value("${brevo.from.email}")
     private String senderEmail;
 
     private final SecureRandom random = new SecureRandom();
