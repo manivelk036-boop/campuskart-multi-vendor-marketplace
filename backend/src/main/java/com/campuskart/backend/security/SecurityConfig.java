@@ -44,14 +44,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            CorsConfigurationSource corsConfigurationSource)
             throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
 
             .cors(cors ->
-                cors.configurationSource(corsConfigurationSource())
+                cors.configurationSource(corsConfigurationSource)
             )
 
             .sessionManagement(session ->
@@ -136,7 +138,13 @@ public class SecurityConfig {
         );
 
         configuration.setAllowedHeaders(
-                Arrays.asList("*")
+                Arrays.asList(
+                    "Authorization",
+                    "Content-Type",
+                    "Accept",
+                    "Origin",
+                    "X-Requested-With"
+                )
         );
 
         configuration.setAllowCredentials(true);
